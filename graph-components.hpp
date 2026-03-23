@@ -1,7 +1,7 @@
 #ifndef _GRAPH_LOGIC_
 #define _GRAPH_LOGIC_
 
-#include <vector>
+#include <deque>
 #include <string>
 
 class Graph;
@@ -11,22 +11,25 @@ class Edge;
 class Graph
 {
 private:
-    std::vector<Node> nodes;
-    std::vector<Edge> edges;
+    std::deque<Node> nodes;
+    std::deque<Edge> edges;
 public:
     Graph();
     ~Graph();
 
     bool is_corrupted(); // full debug: all objects know their connections, no edges lead away
 
-    Node& emplace_node(std::vector<int> values);
-    Edge& emplace_edge(Node& f, Node& s);
+    Node& emplace_node(std::deque<int> values);
+    Edge& emplace_edge(Node* f, Node* s);
 
     void erase_node(const Node& node);
     void erase_edge(const Edge& edge);
+        // argument is reference so user may
+        // delete node/edge by its values
+        // ( funcion compares members )
 
-    std::vector<Node> getNodes();
-    std::vector<Edge> getEdges();
+    std::deque<Node*> getNodePtrs();
+    // std::deque<Edge> getEdges();
 
     void rollcall();
 };
@@ -34,18 +37,18 @@ public:
 class Node
 {
 private:
-    std::vector<int> values;
-    std::vector<Edge*> edges;
+    std::deque<int> values;
+    std::deque<Edge*> edges;
 public:
-    Node(std::vector<int> values);
+    Node(std::deque<int> values);
     ~Node(); // destroy belonging edges
 
-    bool operator==(const Node& other) const;
+    bool operator==(const Node& other) const { return ( values == other.values ); }
 
-    std::vector<int> getValues() { return values; };
-    std::vector<Edge*> getEdges() { return edges; };
+    void add_edge(Edge* edge);
 
-    // void add_edge();
+    std::deque<int> getValues() { return values; };
+    std::deque<Edge*> getEdges() { return edges; };
 };
 
 class Edge
@@ -58,7 +61,7 @@ public:
     Edge(Node* f, Node* s);
     ~Edge();
 
-    bool operator==(const Edge& other) const;
+    bool operator==(const Edge& other) const { return ( first == other.first && second == other.second ); }
 
     Node* getFirst() { return first; };
     Node* getSecond() { return second; };
