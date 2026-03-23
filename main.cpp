@@ -2,18 +2,19 @@
 #include "graph-components.hpp"
 
 int main() {
-    std::cout << "When I grow up I will become a graph visualiser!" << std::endl;
+    std::cout << "When I grow up I will become a graph visualiser!" << std::endl << std::endl;
 
     Graph g;
 
-    Node* tmpA = new Node("Alk", {1, 2});
-    Node* tmpB = new Node("Bru", {2, 5, 6});
+    g.emplace_node({1});
+    g.emplace_node({2});
+    g.emplace_node({3});
+    g.emplace_node({4});
+    // g.emplace_edge( g.getNodes()[0], g.getNodes()[1] );
 
-    g.push_node(*tmpA);
-    g.push_node(*tmpB);
+    g.rollcall();
 
-    delete tmpA;
-    delete tmpB;
+    g.erase_node(g.getNodes()[0]);
 
     g.rollcall();
 
