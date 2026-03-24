@@ -10,11 +10,11 @@ int main() {
     g.emplace_node({2});
     g.emplace_node({3});
     g.emplace_node({4});
-    g.emplace_edge( g.getNodePtrs()[0], g.getNodePtrs()[1] );
+    g.emplace_edge( g.getNodes()[0], g.getNodes()[1] );
 
     g.rollcall();
 
-    g.erase_node( *( g.getNodePtrs()[0] ) );
+    g.erase_node( *( g.getNodes()[0] ) );
 
     g.rollcall();
 

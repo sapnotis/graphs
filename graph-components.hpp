@@ -2,6 +2,7 @@
 #define _GRAPH_LOGIC_
 
 #include <deque>
+#include <vector>
 #include <string>
 
 class Graph;
@@ -11,25 +12,26 @@ class Edge;
 class Graph
 {
 private:
+    const bool allow_equal_nodes; // meant to stay false (one node represents one state of values)
+    const bool allow_multiple_edges; // meant to stay false (different moves of the same result are impossible)
     std::deque<Node> nodes;
     std::deque<Edge> edges;
 public:
     Graph();
     ~Graph();
 
-    bool is_corrupted(); // full debug: all objects know their connections, no edges lead away
+    bool is_corrupted() const; // full debug: all objects know their connections, no edges lead away
 
-    Node& emplace_node(std::deque<int> values);
-    Edge& emplace_edge(Node* f, Node* s);
+    Node* emplace_node(std::vector<int> values);
+    Edge* emplace_edge(Node* f, Node* s);
 
     void erase_node(const Node& node);
     void erase_edge(const Edge& edge);
-        // argument is reference so user may
-        // delete node/edge by its values
-        // ( funcion compares members )
+        // argument is reference so user may delete node/edge by its values
+        // erase_smth(smth* ptr) override may be added ?
 
-    std::deque<Node*> getNodePtrs();
-    // std::deque<Edge> getEdges();
+    std::vector<Node*> getNodes();
+    std::vector<Edge*> getEdges();
 
     void rollcall();
 };
@@ -37,18 +39,19 @@ public:
 class Node
 {
 private:
-    std::deque<int> values;
-    std::deque<Edge*> edges;
+    std::vector<int> values;
+    std::vector<Edge*> edges;
 public:
-    Node(std::deque<int> values);
-    ~Node(); // destroy belonging edges
+    Node(std::vector<int> values);
+    ~Node(); // destroys belonging edges
 
     bool operator==(const Node& other) const { return ( values == other.values ); }
 
-    void add_edge(Edge* edge);
+    Edge* add_edge(Edge* edge);
+    void remove_edge(const Edge& edge);
 
-    std::deque<int> getValues() { return values; };
-    std::deque<Edge*> getEdges() { return edges; };
+    std::vector<int> getValues() { return values; };
+    std::vector<Edge*> getEdges() { return edges; };
 };
 
 class Edge
