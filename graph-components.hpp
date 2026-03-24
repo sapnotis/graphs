@@ -27,11 +27,11 @@ public:
 
     void erase_node(const Node& node);
     void erase_edge(const Edge& edge);
-        // argument is reference so user may delete node/edge by its values
-        // erase_smth(smth* ptr) override may be added ?
 
     std::vector<Node*> getNodes();
     std::vector<Edge*> getEdges();
+    Node* findNode(std::vector<int> values);
+    Edge* findEdge(Node* f, Node* s);
 
     void rollcall();
 };

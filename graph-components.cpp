@@ -12,46 +12,39 @@ Graph::~Graph() { };
 
 
 Node* Graph::emplace_node(std::vector<int> values) {
-    Node tmp_node(values);
-
     if ( allow_equal_nodes ) {
-        nodes.push_back(tmp_node);
+        nodes.emplace_back(values);
         return &( nodes.back() );
     }
     
-    unsigned int i = 0;
-    while ( i < nodes.size() ) {
-        if ( nodes[i] == tmp_node ) {
-            std::cout << "(!) Attempted to double node" << std::endl;
-            return nullptr;
-        }
-        else
-            i++;
+    if ( findNode(values) ) {
+        std::cout << "(!) Attempted to double node" << std::endl;
+        return nullptr;
     }
-    nodes.push_back(tmp_node);
+    
+    nodes.emplace_back(values);
     return &( nodes.back() );
 }
 
 Edge* Graph::emplace_edge(Node* f, Node* s) {
-    Edge tmp_edge(f, s);
+    if ( f==s ) {
+        std::cout << "(!) Attepted to loop new edge" << std::endl;
+        return nullptr;
+    }
 
     if ( allow_multiple_edges ) {
-        edges.push_back(tmp_edge);
+        edges.emplace_back(f, s);
         f->add_edge( &edges.back() );
         s->add_edge( &edges.back() );
         return &( edges.back() );
     }
 
-    unsigned int i = 0;
-    while ( i < edges.size() ) {
-        if ( edges[i] == tmp_edge ) {
-            std::cout << "(!) Attempted to double edge" << std::endl;
-            return nullptr;
-        }
-        else
-            i++;
+    if ( findEdge(f, s) ) {
+        std::cout << "(!) Attempted to double edge" << std::endl;
+        return nullptr;
     }
-    edges.push_back(tmp_edge);
+
+    edges.emplace_back(f, s);
     f->add_edge( &edges.back() );
     s->add_edge( &edges.back() );
     return &( edges.back() );
@@ -107,11 +100,41 @@ std::vector<Edge*> Graph::getEdges() {
     return edge_ptrs;
 };
 
+Node* Graph::findNode(std::vector<int> values) {
+    Node tmp_node(values);
+
+    unsigned int i = 0;
+    while ( i < nodes.size() ) {
+        if ( nodes[i] == tmp_node )
+            return &( nodes[i] );
+        else
+            i++;
+    }
+    return nullptr;
+}
+
+Edge* Graph::findEdge(Node* f, Node* s) {
+    Edge tmp_edge(f, s);
+
+    unsigned int i = 0;
+    while ( i < edges.size() ) {
+        if ( edges[i] == tmp_edge )
+            return &( edges[i] );
+        else
+            i++;
+    }
+    return nullptr;
+}
+
 void Graph::rollcall() {
     std::cout << std::endl;
     std::cout << "=Nodes rollcall=" << std::endl;
     for ( unsigned i=0; i < nodes.size(); i++ ) {
-        std::cout << & nodes[i] << ":\t";
+        std::cout << & nodes[i];
+        std::cout << "\t";
+        for ( unsigned int j=0; j < nodes[i].getValues().size(); j++ )
+            std::cout << " " << nodes[i].getValues()[j];
+        std::cout << "\t";
         for ( unsigned int j=0; j < nodes[i].getEdges().size(); j++ )
             std::cout << " " << nodes[i].getEdges()[j];
         std::cout << std::endl;
