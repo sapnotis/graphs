@@ -7,3 +7,16 @@
     Дочерние классы к пункту выше, граф в линейном трёхмерном пространстве. Взаимодействия вершин как точечных тел (слабое притяжение, сильное отталкивание, рёбра-пружины). Вершины и рёбра умеют вычислять свою проекцию на экран (static положение "камеры"?).
 3) Фейерверк
     Появление SFML. Класс визуализатор, выводящий граф на экран.
+
+
+
+Памятка по сборке (потом будет makefile):
+
+g++ *.cpp -o main
+-Wall -Wextra -Wpedantic -Werror
+-lsfml-graphics -lsfml-window -lsfml-system
+
+valgrind ./main
+(утекает 1,049 bytes in 3 blocks, это sfml)
+
+g++ *.cpp -o main -Wall -Wextra -Wpedantic -Werror -lsfml-graphics -lsfml-window -lsfml-system && valgrind ./main

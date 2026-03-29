@@ -2,6 +2,8 @@
 #define _GRAPH_PHYSICS_
 
 #include "graph-components.hpp"
+#include <vector>
+#include <SFML/Graphics.hpp>
 
 // things should have been inherited from Graph and Node,
 // but concept changed once again, i'm sorry
@@ -12,7 +14,7 @@ struct xyz
     double y;
     double z;
 
-    /*xyz operator+(const xyz& other) const {
+    /*xyz operator+(const xyz& other) const { 
         xyz tmp = {
             x + other.x,
             y + other.y,
@@ -28,12 +30,17 @@ class PhysNode;
 class PhysSpace
 {
 private:
-    std::vector<PhysNode> physnodes;
+    Graph* graph;
+    std::vector<PhysNode> nodes;
 public:
-    PhysSpace();
+    PhysSpace(Graph& graph);
     ~PhysSpace();
 
+    void sync_nodes();
+
     void update_all();
+
+    void display_all();
 };
 
 class PhysNode
@@ -50,8 +57,11 @@ public:
 
     void update_velocity();
     void update_coord();
- 
     xyz calculate_projection();
+
+    Node* getNode() { return node; };
+    xyz getCoords() { return coords; };
+    xyz getVelocity() { return velocity; };
 };
 
 #endif

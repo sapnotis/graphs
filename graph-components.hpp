@@ -3,7 +3,6 @@
 
 #include <deque>
 #include <vector>
-#include <string>
 
 class Graph;
 class Node;
