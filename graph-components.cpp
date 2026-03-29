@@ -18,7 +18,7 @@ Node* Graph::emplace_node(std::vector<int> values) {
     }
     
     if ( findNode(values) ) {
-        std::cout << "(!) Attempted to double node" << std::endl;
+        std::cout << "(!) Graph attempted to double node" << std::endl;
         return nullptr;
     }
     
@@ -26,33 +26,30 @@ Node* Graph::emplace_node(std::vector<int> values) {
     return &( nodes.back() );
 }
 
-Edge* Graph::emplace_edge(Node* f, Node* s) {
+void Graph::emplace_edge(Node* f, Node* s) {
     if ( !f || !s ) {
-        std::cout << "(!) Attepted to emplace nullptr edge" << std::endl;
-        return nullptr;
+        std::cout << "(!) Graph attepted to emplace nullptr edge" << std::endl;
+        return;
     }
 
     if ( f==s ) {
-        std::cout << "(!) Attepted to loop new edge" << std::endl;
-        return nullptr;
+        std::cout << "(!) Graph attepted to loop new edge" << std::endl;
+        return;
     }
 
     if ( allow_multiple_edges ) {
-        edges.emplace_back(f, s);
-        f->add_edge( &edges.back() );
-        s->add_edge( &edges.back() );
-        return &( edges.back() );
+        f->add_edge( s );
+        s->add_edge( f );
+        return;
     }
 
-    if ( findEdge(f, s) ) {
-        std::cout << "(!) Attempted to double edge" << std::endl;
-        return nullptr;
+    if ( f->find_edge(s) || s->find_edge(f) ) {
+        std::cout << "(!) Graph attempted to double edge" << std::endl;
+        return;
     }
 
-    edges.emplace_back(f, s);
-    f->add_edge( &edges.back() );
-    s->add_edge( &edges.back() );
-    return &( edges.back() );
+    f->add_edge( s );
+    s->add_edge( f );
 }
 
 void Graph::erase_node(const Node& node) {
@@ -60,8 +57,8 @@ void Graph::erase_node(const Node& node) {
     while ( i < nodes.size() ) {
 
         if ( nodes[i] == node ) {
-            for ( Edge* edge : nodes[i].getEdges() )
-                erase_edge(*edge);
+            for ( Node* tmp : nodes[i].getEdges() )
+                tmp->forget_edge( &nodes[i] );
             nodes.erase(nodes.begin() + i);
             return;
         }
@@ -71,20 +68,13 @@ void Graph::erase_node(const Node& node) {
     std::cout << "(!) Graph couldn't erase node" << std::endl;
 };
 
-void Graph::erase_edge(const Edge& edge) {
-    unsigned int i = 0;
-    while ( i < edges.size() ) {
-
-        if ( edges[i] == edge ) {
-            edges[i].getFirst()->remove_edge(edge);
-            edges[i].getSecond()->remove_edge(edge);
-            edges.erase(edges.begin() + i);
-            return;
-        }
-        else
-            i++;
+void Graph::erase_edge(Node* f, Node* s) {
+    if ( ! f->find_edge( s ) || ! s->find_edge( f ) ) {
+        std::cout << "(!) Graph couldn't erase edge" << std::endl;
     }
-    std::cout << "(!) Graph couldn't erase edge" << std::endl;
+
+    f->forget_edge( s );
+    s->forget_edge( f );
 };
 
 std::vector<Node*> Graph::getNodes() {
@@ -96,15 +86,6 @@ std::vector<Node*> Graph::getNodes() {
     return node_ptrs;
 };
 
-std::vector<Edge*> Graph::getEdges() {
-    std::vector<Edge*> edge_ptrs;
-
-    for ( unsigned int i = 0; i < edges.size(); i++ )
-        edge_ptrs.push_back( &edges[i] );
-
-    return edge_ptrs;
-};
-
 Node* Graph::findNode(std::vector<int> values) {
     Node tmp_node(values);
 
@@ -112,19 +93,6 @@ Node* Graph::findNode(std::vector<int> values) {
     while ( i < nodes.size() ) {
         if ( nodes[i] == tmp_node )
             return &( nodes[i] );
-        else
-            i++;
-    }
-    return nullptr;
-}
-
-Edge* Graph::findEdge(Node* f, Node* s) {
-    Edge tmp_edge(f, s);
-
-    unsigned int i = 0;
-    while ( i < edges.size() ) {
-        if ( edges[i] == tmp_edge )
-            return &( edges[i] );
         else
             i++;
     }
@@ -144,42 +112,42 @@ void Graph::rollcall() {
             std::cout << " " << nodes[i].getEdges()[j];
         std::cout << std::endl;
     }
-    std::cout << "=Edges rollcall=" << std::endl;
-    for ( unsigned i=0; i < edges.size(); i++ ) {
-        std::cout << & edges[i] << ":\t" << edges[i].getFirst()
-            << " " << edges[i].getSecond() << std::endl;
-    }
     std::cout << "=Rollcall ended=" << std::endl;
     std::cout << std::endl;
 }
 
 
 Node::Node(std::vector<int> values)
-    : values(values) { };
+    : values(values), checked(false) { };
 
 Node::~Node() { };
 
-Edge* Node::add_edge(Edge* edge) {
-    edges.push_back( edge );
-    return edges.back();
+void Node::add_edge(Node* node) {
+    edges.push_back(node);
 };
 
-void Node::remove_edge(const Edge& edge) {
+bool Node::find_edge(Node* node) {
     unsigned int i = 0;
     while ( i < edges.size() ) {
 
-        if ( *edges[i] == edge ) {
+        if ( edges[i] == node )
+            return true;
+        else
+            i++;
+    }
+    return false;
+};
+
+void Node::forget_edge(Node* node) {
+    unsigned int i = 0;
+    while ( i < edges.size() ) {
+
+        if ( edges[i] == node ) {
             edges.erase(edges.begin() + i);
             return;
         }
         else
             i++;
     }
-    std::cout << "(!) Node couldn't remove edge" << std::endl;
-}
-
-
-Edge::Edge(Node* f, Node* s)
-    : first(f), second(s), directional(false) { };
-
-Edge::~Edge() { };
+    std::cout << "(!) Node couldn't forget edge" << std::endl;
+};

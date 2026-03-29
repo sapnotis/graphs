@@ -3,6 +3,9 @@
 
 #include "graph-components.hpp"
 
+// things should have been inherited from Graph and Node,
+// but concept changed once again, i'm sorry
+
 struct xyz
 {
     double x;
@@ -19,16 +22,35 @@ struct xyz
     }*/
 };
 
-class PhNode : public Node
+class PhysSpace;
+class PhysNode;
+
+class PhysSpace
 {
 private:
-    static xyz projection_line;
+    std::vector<PhysNode> physnodes;
+public:
+    PhysSpace();
+    ~PhysSpace();
+
+    void update_all();
+};
+
+class PhysNode
+{
+private:
+    Node* node;
     xyz coords;
     xyz velocity;
+    static xyz projection_line;
 public:
-    PhNode();
-    ~PhNode();
+    PhysNode(Node* node, xyz coords);
+    PhysNode(Node* node);
+    ~PhysNode();
 
+    void update_velocity();
+    void update_coord();
+ 
     xyz calculate_projection();
 };
 
