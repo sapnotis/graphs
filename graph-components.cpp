@@ -27,6 +27,11 @@ Node* Graph::emplace_node(std::vector<int> values) {
 }
 
 Edge* Graph::emplace_edge(Node* f, Node* s) {
+    if ( !f || !s ) {
+        std::cout << "(!) Attepted to emplace nullptr edge" << std::endl;
+        return nullptr;
+    }
+
     if ( f==s ) {
         std::cout << "(!) Attepted to loop new edge" << std::endl;
         return nullptr;
