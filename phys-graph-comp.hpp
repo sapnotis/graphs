@@ -14,14 +14,14 @@ struct xyz
     double y;
     double z;
 
-    /*xyz operator+(const xyz& other) const { 
+    xyz operator+(const xyz& other) const { 
         xyz tmp = {
             x + other.x,
             y + other.y,
             z + other.z
         };
         return tmp;
-    }*/
+    }
 };
 
 class PhysSpace;
