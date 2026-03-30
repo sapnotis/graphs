@@ -26,6 +26,22 @@ Node* Graph::emplace_node(std::vector<int> values) {
     return &( nodes.back() );
 }
 
+void Graph::emplace_edge(std::vector<int> val_f, std::vector<int> val_s) {
+    Node* f = findNode(val_f);
+    Node* s = findNode(val_s);
+    emplace_edge( f, s );
+};
+
+void Graph::emplace_edge(Node* f, std::vector<int> val_s) {
+    Node* s = findNode(val_s);
+    emplace_edge( f, s );
+};
+
+void Graph::emplace_edge(std::vector<int> val_f, Node* s) {
+    Node* f = findNode(val_f);
+    emplace_edge( f, s );
+};
+
 void Graph::emplace_edge(Node* f, Node* s) {
     if ( !f || !s ) {
         std::cout << "(!) Graph attepted to emplace nullptr edge" << std::endl;
@@ -52,9 +68,15 @@ void Graph::emplace_edge(Node* f, Node* s) {
     s->add_edge( f );
 }
 
+void Graph::erase_node(Node* node) {
+    erase_node( *node );
+};
+
 void Graph::erase_node(const Node& node) {
     unsigned int i = 0;
-    while ( i < nodes.size() ) {
+    unsigned int len = nodes.size();
+
+    while ( i < len ) {
 
         if ( nodes[i] == node ) {
             for ( Node* tmp : nodes[i].getEdges() )
@@ -65,7 +87,14 @@ void Graph::erase_node(const Node& node) {
         else
             i++;
     }
+    
     std::cout << "(!) Graph couldn't erase node" << std::endl;
+};
+
+void Graph::erase_edge(std::vector<int> val_f, std::vector<int> val_s) {
+    Node* f = findNode(val_f);
+    Node* s = findNode(val_s);
+    erase_edge( f, s );
 };
 
 void Graph::erase_edge(Node* f, Node* s) {

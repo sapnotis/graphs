@@ -4,9 +4,8 @@
 #include "graph-components.hpp"
 #include <vector>
 #include <SFML/Graphics.hpp>
-
-// things should have been inherited from Graph and Node,
-// but concept changed once again, i'm sorry
+#include <random>
+#include <chrono>
 
 struct xyz
 {
@@ -14,15 +13,24 @@ struct xyz
     double y;
     double z;
 
-    xyz operator+(const xyz& other) const { 
-        xyz tmp = {
-            x + other.x,
-            y + other.y,
-            z + other.z
-        };
-        return tmp;
-    }
+    void display();
+
+    // xyz& operator=(const xyz& other) {
+    //     x = other.x;
+    //     y = other.y;
+    //     z = other.z;
+    //     return *this;
+    // }
+
+    // xyz& operator+(const xyz& other) {
+    //     x += other.x;
+    //     y += other.y;
+    //     z += other.z;
+    //     return *this;
+    // }
 };
+
+xyz rnd_direction();
 
 class PhysSpace;
 class PhysNode;
@@ -37,9 +45,7 @@ public:
     ~PhysSpace();
 
     void sync_nodes();
-
     void update_all();
-
     void display_all();
 };
 
@@ -47,10 +53,10 @@ class PhysNode
 {
 private:
     Node* node;
-    xyz coords;
-    xyz velocity;
     static xyz projection_line;
 public:
+    xyz coords;
+    xyz velocity;
     PhysNode(Node* node, xyz coords);
     PhysNode(Node* node);
     ~PhysNode();
@@ -60,8 +66,6 @@ public:
     xyz calculate_projection();
 
     Node* getNode() { return node; };
-    xyz getCoords() { return coords; };
-    xyz getVelocity() { return velocity; };
 };
 
 #endif

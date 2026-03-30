@@ -20,9 +20,16 @@ public:
     bool is_corrupted() const; // full debug: all objects know their connections, no edges lead away
 
     Node* emplace_node(std::vector<int> values);
+
+    void emplace_edge(std::vector<int> val_f, std::vector<int> val_s);
+    void emplace_edge(Node* f, std::vector<int> val_s);
+    void emplace_edge(std::vector<int> val_f, Node* s);
     void emplace_edge(Node* f, Node* s);
 
+    void erase_node(Node* node);
     void erase_node(const Node& node);
+
+    void erase_edge(std::vector<int> val_f, std::vector<int> val_s);
     void erase_edge(Node* f, Node* s);
 
     std::vector<Node*> getNodes();
