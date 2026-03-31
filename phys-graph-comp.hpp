@@ -9,28 +9,23 @@
 
 struct xyz
 {
-    double x;
-    double y;
-    double z;
+    float x;
+    float y;
+    float z;
 
     void display();
-
-    // xyz& operator=(const xyz& other) {
-    //     x = other.x;
-    //     y = other.y;
-    //     z = other.z;
-    //     return *this;
-    // }
-
-    // xyz& operator+(const xyz& other) {
-    //     x += other.x;
-    //     y += other.y;
-    //     z += other.z;
-    //     return *this;
-    // }
 };
 
-xyz rnd_direction();
+struct xy
+{
+    float x;
+    float y;
+
+    void display();
+};
+
+xyz xyz_rnd_direction();
+xy window_xy(xy coords, sf::RenderWindow& window, float scale);
 
 class PhysSpace;
 class PhysNode;
@@ -45,27 +40,34 @@ public:
     ~PhysSpace();
 
     void sync_nodes();
-    void update_all();
-    void display_all();
+    
+    void update_nodes();
+    void update_observer();
+    void update_observer_goal();
+
+    void display_all(sf::RenderWindow& window, float scale);
 };
 
 class PhysNode
 {
 private:
-    Node* node;
+    // std::vector<PhysNode*> neighbours;
+    static xyz observer;
+    static xyz observer_goal;
     static xyz projection_line;
 public:
     xyz coords;
-    xyz velocity;
+    xy projection;
+
     PhysNode(Node* node, xyz coords);
     PhysNode(Node* node);
     ~PhysNode();
 
-    void update_velocity();
-    void update_coord();
-    xyz calculate_projection();
+    void update_coords();
+    void update_projection();
 
-    Node* getNode() { return node; };
+    void display_self(sf::RenderWindow& window, float scale);
+    void display_edges(sf::RenderWindow& window, float scale);
 };
 
 #endif
