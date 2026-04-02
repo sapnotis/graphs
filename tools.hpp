@@ -21,7 +21,7 @@ struct xy
 };
 
 xyz xyz_rnd_direction(float amplitude);
-// xy window_xy(xy coords, sf::RenderWindow& window, float scale);
-xy window_xy(xy coords, float scale);
+
+unsigned int brightness(float depth);
 
 #endif

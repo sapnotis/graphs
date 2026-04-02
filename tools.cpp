@@ -38,13 +38,6 @@ xyz xyz_rnd_direction(float amplitude) {
     return dir;
 }
 
-xy window_xy(xy coords, float scale) {
-	xy disp;
-
-    disp.x = 1200 / 2;
-    disp.x += scale * coords.x;
-    disp.y = 800 / 2;
-    disp.y += scale * coords.y;
-	
-    return disp;
+unsigned int brightness(float depth) {
+    return (unsigned)(55*depth) + 200;
 };

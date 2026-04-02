@@ -17,11 +17,11 @@ private:
     const bool allow_equal_nodes; // meant to stay false (one node represents one state of values)
     const bool allow_multiple_edges; // meant to stay false (different moves of the same result are impossible)
     std::deque<Node> nodes;
-
-    xyz observer;
-    xyz observer_goal;
-    xyz projection_line;
 public:
+    xyz center;
+    float yaw;
+    float pitch;
+
     Graph();
     ~Graph();
     bool is_corrupted() const;
@@ -39,15 +39,19 @@ public:
     void erase_edge(std::vector<int> val_f, std::vector<int> val_s);
     void erase_edge(Node* f, Node* s);
 
-    std::vector<Node*> getNodes();
     Node* findNode(std::vector<int> values);
-
+    std::vector<Node*> getNodes();
     void rollcall();
 
     void update_nodes();
-    void update_observer_goal();
-    void update_observer();
+
+    void display_node(sf::RenderWindow& window, float scale, xyz point);
+    void display_edge(sf::RenderWindow& window, float scale, xyz p1, xyz p2);
+
+    xyz calc_node_screen_coords(const Node& node);
     void display(sf::RenderWindow& window, float scale);
+
+    xy getYawPitch() { return {yaw, pitch}; };
 };
 
 class Node
@@ -56,7 +60,6 @@ private:
     std::vector<int> values;
     std::vector<Node*> edges;
     xyz coords;
-    xyz screen_coords;
 public:
     bool checked;
     
@@ -71,15 +74,13 @@ public:
     void forget_edge(Node* node);
 
     void update_coords();
-    void update_screen_coords();
 
-    void display_self(sf::RenderWindow& window, float scale);
-    void display_edges(sf::RenderWindow& window, float scale);
+    // void display_self(sf::RenderWindow& window, float scale);
+    // void display_edges(sf::RenderWindow& window, float scale);
 
     std::vector<int> getValues() { return values; };
     std::vector<Node*> getEdges() { return edges; };
-    xyz getCoords() { return coords; };
-    xyz getScreenCoords() { return screen_coords; };
+    xyz getCoords() const { return coords; };
 };
 
 #endif

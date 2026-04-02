@@ -2,6 +2,7 @@
 
 #include <deque>
 #include <vector>
+#include <map>
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
@@ -105,15 +106,6 @@ void Graph::erase_edge(Node* f, Node* s) {
     s->forget_edge( f );
 };
 
-std::vector<Node*> Graph::getNodes() {
-    std::vector<Node*> node_ptrs;
-
-    for ( unsigned int i = 0; i < nodes.size(); i++ )
-        node_ptrs.push_back( &nodes[i] );
-
-    return node_ptrs;
-};
-
 Node* Graph::findNode(std::vector<int> values) {
     Node tmp_node(values);
 
@@ -126,6 +118,15 @@ Node* Graph::findNode(std::vector<int> values) {
     }
     return nullptr;
 }
+
+std::vector<Node*> Graph::getNodes() {
+    std::vector<Node*> node_ptrs;
+
+    for ( unsigned int i = 0; i < nodes.size(); i++ )
+        node_ptrs.push_back( &nodes[i] );
+
+    return node_ptrs;
+};
 
 void Graph::rollcall() {
     std::cout << std::endl;
@@ -146,10 +147,10 @@ void Graph::rollcall() {
 
 
 Node::Node(std::vector<int> values)
-    : values(values), coords({0, 0, 0}), screen_coords({0, 0, 0}), checked(false) { };
+    : values(values), coords({0, 0, 0}), checked(false) { };
 
 Node::Node(std::vector<int> values, xyz coords)
-    : values(values), coords(coords), screen_coords({0, 0, 0}), checked(false) { };
+    : values(values), coords(coords), checked(false) { };
 
 Node::~Node() { };
 
@@ -183,89 +184,85 @@ void Node::forget_edge(Node* node) {
     std::cout << "(!) Node couldn't forget edge" << std::endl;
 };
 
-// SFML
+// Physics
 
 void Graph::update_nodes() {
 
-    unsigned int len = nodes.size();
-    for ( unsigned int i=0; i < len; i++ ) {
-        nodes[i].update_coords();
-        nodes[i].update_screen_coords();
-    }
+    // temporary nonsence
+    nodes[ (unsigned)( xyz_rnd_direction(4).x + 4) ].update_coords();
 
 };
 
-// void Graph::update_observer_goal();
-// void Graph::update_observer();
+void Graph::display_node(sf::RenderWindow& window, float scale, xyz point) {
+
+    float RadiusInPixels = 0.06 * scale;
+
+    unsigned int br = brightness(point.z);
+    sf::Color color = sf::Color(255 - br, 255 - br, br);
+
+    sf::CircleShape circle(RadiusInPixels);
+    circle.setOrigin(RadiusInPixels, RadiusInPixels);
+    circle.setFillColor(color);
+
+    circle.setPosition(point.x, point.y);
+    window.draw(circle);
+};
+
+void Graph::display_edge(sf::RenderWindow& window, float scale, xyz p1, xyz p2) {
+
+    scale *= 2; // rest, -Werror=unused-parameter
+
+    unsigned int br1 = brightness(p1.z);
+    unsigned int br2 = brightness(p2.z);
+
+    sf::Vertex line[] =
+    {
+        sf::Vertex(sf::Vector2f(p1.x, p1.y)),
+        sf::Vertex(sf::Vector2f(p2.x, p2.y))
+    };
+
+    line[0].color = sf::Color(255 - br1, 255 - br2, br1);
+    line[1].color = sf::Color(255 - br1, 255 - br2, br2);
+
+    window.draw(line, 2, sf::Lines);
+};
+
+xyz Graph::calc_node_screen_coords(const Node& node) {
+    
+    return node.getCoords();
+
+};
 
 void Graph::display(sf::RenderWindow& window, float scale) {
 
-    // unsigned int len = nodes.size();
-    // for ( unsigned int i=0; i < len; i++ ) {
-    //     nodes[i].display_self(window, scale);
-    //     nodes[i].display_edges(window, scale);
-    // }
+    unsigned int window_width = window.getSize().x;
+    unsigned int window_height = window.getSize().y;
+    unsigned int number_of_nodes = nodes.size();
 
-    for ( Node tmp : nodes ) {
-        tmp.display_self(window, scale);
-        tmp.display_edges(window, scale);
+    std::map<Node*, xyz> nodes_xyzs;
+
+    for ( unsigned int i = 0; i < number_of_nodes; i++ ) {
+
+        xyz node_scr_c = calc_node_screen_coords( nodes[i] );
+        node_scr_c.x = node_scr_c.x * scale + window_width / 2;
+        node_scr_c.y = node_scr_c.y * scale + window_height / 2;
+        node_scr_c.z = node_scr_c.z * scale;
+
+        nodes_xyzs[ &nodes[i] ] = node_scr_c;
+    }
+
+    for ( unsigned int i = 0; i < number_of_nodes; i++ ) {
+        display_node( window, scale, nodes_xyzs[ &nodes[i] ] );
+
+        std::vector<Node*> neighbours = nodes[i].getEdges();
+        for ( unsigned int j = 0; j < neighbours.size(); j++ )
+            display_edge( window, scale, nodes_xyzs[ &nodes[i] ], nodes_xyzs[ neighbours[j] ] );
     }
 
 };
 
 void Node::update_coords() {
 
-    coords = xyz_rnd_direction(2);
+    coords = xyz_rnd_direction(2.f);
     
-};
-
-void Node::update_screen_coords() {
-
-    screen_coords = coords;
-
-};
-
-void Node::display_self(sf::RenderWindow& window, float scale) {
-
-    float RadiusInPixels = 0.06 * scale;
-    sf::Color color = sf::Color::White;
-
-    if ( this->checked )
-        color = sf::Color(100, 100, 100);
-
-    sf::CircleShape circle(RadiusInPixels);
-    circle.setOrigin(RadiusInPixels, RadiusInPixels);
-    circle.setFillColor(color);
-    
-    // circle.setOutlineColor(sf::Color::White);
-    // circle.setOutlineThickness(1.f);
-
-    xy projection = {screen_coords.x, screen_coords.y};
-    xy dispCoords = window_xy(projection, scale);
-
-    circle.setPosition(dispCoords.x, dispCoords.y);
-    window.draw(circle);
-};
-
-void Node::display_edges(sf::RenderWindow& window, float scale) {
-
-    xy self_projection = {screen_coords.x, screen_coords.y};
-    xy self_dispCoords = window_xy(self_projection, scale);
-
-    for ( Node* tmp : edges ) {
-
-        xy next_projection = {tmp->getScreenCoords().x, tmp->getScreenCoords().y};
-        xy next_dispCoords = window_xy( next_projection, scale);
-
-        sf::Vertex line[] =
-        {
-            sf::Vertex(sf::Vector2f(self_dispCoords.x, self_dispCoords.y)),
-            sf::Vertex(sf::Vector2f(next_dispCoords.x, next_dispCoords.y))
-        };
-
-        line[0].color = sf::Color::White;
-        line[1].color = sf::Color::White;
-
-        window.draw(line, 2, sf::Lines);
-    }
 };
