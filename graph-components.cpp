@@ -3,11 +3,14 @@
 #include <deque>
 #include <vector>
 #include <map>
+#include <cmath>
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-Graph::Graph() : allow_equal_nodes(false), allow_multiple_edges(false) { };
+Graph::Graph() : allow_equal_nodes(false), allow_multiple_edges(false),
+    center({0, 0, 0}), small_corner({0, 0, 0}), big_corner({0, 0, 0}),
+    yaw(0), pitch(0) { };
 
 Graph::~Graph() { };
 
@@ -145,7 +148,6 @@ void Graph::rollcall() {
     std::cout << std::endl;
 }
 
-
 Node::Node(std::vector<int> values)
     : values(values), coords({0, 0, 0}), checked(false) { };
 
@@ -184,21 +186,62 @@ void Node::forget_edge(Node* node) {
     std::cout << "(!) Node couldn't forget edge" << std::endl;
 };
 
-// Physics
+// Graph in space
 
 void Graph::update_nodes() {
 
     // temporary nonsence
-    nodes[ (unsigned)( xyz_rnd_direction(4).x + 4) ].update_coords();
+    for ( unsigned int i=0; i<nodes.size(); i++ )
+        nodes[i].update_coords();
 
 };
 
-void Graph::display_node(sf::RenderWindow& window, float scale, xyz point) {
+xyz Graph::calc_window_coords(xyz coords, float scale, xy window_center) {
 
-    float RadiusInPixels = 0.06 * scale;
+    coords -= center;
 
-    unsigned int br = brightness(point.z);
-    sf::Color color = sf::Color(255 - br, 255 - br, br);
+    xyz yaw_coords = {
+        coords.x * std::cos( yaw ) - coords.z * std::sin( yaw ),
+        coords.y,
+        coords.x * std::sin( yaw ) + coords.z * std::cos( yaw )
+    };
+
+    xyz final_coords = {
+        yaw_coords.x,
+        yaw_coords.y * std::cos( pitch ) - yaw_coords.z * std::sin( pitch ),
+        yaw_coords.y * std::sin( pitch ) + yaw_coords.z * std::cos( pitch )
+    };
+
+    final_coords.x = final_coords.x * scale + window_center.x;
+    final_coords.y = final_coords.y * scale + window_center.y;
+    final_coords.z = final_coords.z * scale;
+
+    return final_coords;
+
+};
+
+void Graph::display_node(sf::RenderWindow& window, float scale, xyz coords) {
+
+    display_point(window, scale, coords, sf::Color::White);
+
+};
+
+void Graph::display_edge(sf::RenderWindow& window, xyz p1, xyz p2) {
+
+    xy xy_p1 = {p1.x, p1.y};
+    xy xy_p2 = {p2.x, p2.y};
+    display_line( window, xy_p1, xy_p2, sf::Color::White, sf::Color::White );
+
+};
+
+void Graph::display_point(sf::RenderWindow& window, float scale, xyz point, sf::Color color) {
+    xy xy_point = {point.x, point.y};
+    display_point(window, scale, xy_point, color);
+};
+
+void Graph::display_point(sf::RenderWindow& window, float scale, xy point, sf::Color color) {
+    
+    float RadiusInPixels = 0.03 * scale;
 
     sf::CircleShape circle(RadiusInPixels);
     circle.setOrigin(RadiusInPixels, RadiusInPixels);
@@ -208,12 +251,11 @@ void Graph::display_node(sf::RenderWindow& window, float scale, xyz point) {
     window.draw(circle);
 };
 
-void Graph::display_edge(sf::RenderWindow& window, float scale, xyz p1, xyz p2) {
+void Graph::display_line(sf::RenderWindow& window, xy p1, xy p2, sf::Color color) {
+    display_line(window, p1, p2, color, color);
+};
 
-    scale *= 2; // rest, -Werror=unused-parameter
-
-    unsigned int br1 = brightness(p1.z);
-    unsigned int br2 = brightness(p2.z);
+void Graph::display_line(sf::RenderWindow& window, xy p1, xy p2, sf::Color col1, sf::Color col2) {
 
     sf::Vertex line[] =
     {
@@ -221,48 +263,99 @@ void Graph::display_edge(sf::RenderWindow& window, float scale, xyz p1, xyz p2) 
         sf::Vertex(sf::Vector2f(p2.x, p2.y))
     };
 
-    line[0].color = sf::Color(255 - br1, 255 - br2, br1);
-    line[1].color = sf::Color(255 - br1, 255 - br2, br2);
+    line[0].color = col1;
+    line[1].color = col2;
 
     window.draw(line, 2, sf::Lines);
 };
 
-xyz Graph::calc_node_screen_coords(const Node& node) {
-    
-    return node.getCoords();
 
-};
+void Graph::display_grid(sf::RenderWindow& window, float scale) {
+
+    sf::Color grid_color = sf::Color::Red;
+
+    std::map<int, xy> corners;
+
+    for ( int i = 0; i < 8; i++ ) {
+        xyz corner_window_coords = calc_window_coords(
+            { (i % 2) * small_corner.x + !(i % 2) * big_corner.x,
+            (i/2 % 2) * small_corner.y + !(i/2 % 2) * big_corner.y,
+            (i/4 % 8) * small_corner.z + !(i/4 % 2) * big_corner.z },
+            scale,
+            { 0.5f * window.getSize().x,
+            0.5f * window.getSize().y } );
+            
+            corners[i] = {corner_window_coords.x, corner_window_coords.y};
+    }
+    
+    for ( int i = 0; i < 4; i ++ )
+        display_line( window, corners[i], corners[i+4], grid_color );
+    for ( int i = 0; i < 4; i ++ )
+        display_line( window, corners[2*i], corners[2*i+1], grid_color );
+    for ( int i = 0; i < 2; i ++ )
+        display_line( window, corners[i], corners[i+2], grid_color );
+    for ( int i = 4; i < 6; i ++ )
+        display_line( window, corners[i], corners[i+2], grid_color );
+        
+}
 
 void Graph::display(sf::RenderWindow& window, float scale) {
 
-    unsigned int window_width = window.getSize().x;
-    unsigned int window_height = window.getSize().y;
+    xy window_center = {0.5f * window.getSize().x, 0.5f * window.getSize().y};
     unsigned int number_of_nodes = nodes.size();
+    
+    center = small_corner = big_corner = {0, 0, 0};
 
-    std::map<Node*, xyz> nodes_xyzs;
+    for ( Node tmp : nodes ) {
+
+        xyz tmp_coords = tmp.getCoords();
+
+        if ( tmp_coords.x < small_corner.x )
+            small_corner.x = tmp_coords.x;
+        if ( tmp_coords.y < small_corner.y )
+            small_corner.y = tmp_coords.y;
+        if ( tmp_coords.z < small_corner.z )
+            small_corner.z = tmp_coords.z;
+        
+        if ( tmp_coords.x > big_corner.x )
+            big_corner.x = tmp_coords.x;
+        if ( tmp_coords.y > big_corner.y )
+            big_corner.y = tmp_coords.y;
+        if ( tmp_coords.z > big_corner.z )
+            big_corner.z = tmp_coords.z;
+    }
+
+    small_corner *= 1.2f;
+    big_corner *= 1.2f;
+
+    center += (small_corner * 0.5f);
+    center += (big_corner * 0.5f);
+
+    display_grid( window, scale );
+
+
+
+    std::map<Node*, xyz> nodes_window_xyz;
 
     for ( unsigned int i = 0; i < number_of_nodes; i++ ) {
-
-        xyz node_scr_c = calc_node_screen_coords( nodes[i] );
-        node_scr_c.x = node_scr_c.x * scale + window_width / 2;
-        node_scr_c.y = node_scr_c.y * scale + window_height / 2;
-        node_scr_c.z = node_scr_c.z * scale;
-
-        nodes_xyzs[ &nodes[i] ] = node_scr_c;
+        nodes_window_xyz[ &nodes[i] ] =
+            calc_window_coords( nodes[i].getCoords(), scale, window_center );
     }
 
     for ( unsigned int i = 0; i < number_of_nodes; i++ ) {
-        display_node( window, scale, nodes_xyzs[ &nodes[i] ] );
+
+        display_node( window, scale, nodes_window_xyz[ &nodes[i] ] );
 
         std::vector<Node*> neighbours = nodes[i].getEdges();
         for ( unsigned int j = 0; j < neighbours.size(); j++ )
-            display_edge( window, scale, nodes_xyzs[ &nodes[i] ], nodes_xyzs[ neighbours[j] ] );
+            display_edge( window, nodes_window_xyz[ &nodes[i] ], nodes_window_xyz[ neighbours[j] ] );
     }
 
 };
 
 void Node::update_coords() {
 
-    coords = xyz_rnd_direction(2.f);
+    coords = xyz_rnd_direction(1.f);
+    // coords = {0, 0, 1};
     
 };

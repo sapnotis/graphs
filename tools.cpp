@@ -4,7 +4,6 @@
 #include <SFML/Graphics.hpp>
 
 #include <random>
-// #include <chrono>
 
 void xyz::display() {
     std::cout << x << " " << y << " " << z << std::endl;
@@ -38,6 +37,8 @@ xyz xyz_rnd_direction(float amplitude) {
     return dir;
 }
 
-unsigned int brightness(float depth) {
-    return (unsigned)(55*depth) + 200;
+sf::Color color_of_depth(float depth) {
+    sf::Color color;
+    color.r = color.g = color.b = 200 + (int)(depth) * 0; // 4 -Werror=unused-parameter
+    return color;
 };

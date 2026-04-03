@@ -4,6 +4,7 @@
 #include "tools.hpp"
 #include <deque>
 #include <vector>
+#include <map>
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
@@ -17,11 +18,13 @@ private:
     const bool allow_equal_nodes; // meant to stay false (one node represents one state of values)
     const bool allow_multiple_edges; // meant to stay false (different moves of the same result are impossible)
     std::deque<Node> nodes;
-public:
+
     xyz center;
+    xyz small_corner;
+    xyz big_corner;
     float yaw;
     float pitch;
-
+public:
     Graph();
     ~Graph();
     bool is_corrupted() const;
@@ -44,14 +47,33 @@ public:
     void rollcall();
 
     void update_nodes();
+    
+    xyz calc_window_coords(xyz coords, float scale, xy window_center);
+    void display_node(sf::RenderWindow& window, float scale, xyz coords);
+    void display_edge(sf::RenderWindow& window, xyz p1, xyz p2);
 
-    void display_node(sf::RenderWindow& window, float scale, xyz point);
-    void display_edge(sf::RenderWindow& window, float scale, xyz p1, xyz p2);
+    void display_point(sf::RenderWindow& window, float scale, xyz point, sf::Color color);
+    void display_point(sf::RenderWindow& window, float scale, xy point, sf::Color color);
 
-    xyz calc_node_screen_coords(const Node& node);
+    void display_line(sf::RenderWindow& window, xy p1, xy p2, sf::Color color);
+    void display_line(sf::RenderWindow& window, xy p1, xy p2, sf::Color col1, sf::Color col2);
+
+    void display_grid(sf::RenderWindow& window, float scale);
     void display(sf::RenderWindow& window, float scale);
 
-    xy getYawPitch() { return {yaw, pitch}; };
+    void addYaw(float dyaw) {
+        yaw += dyaw;
+        if ( yaw > 6.28f )
+            yaw -= 6.28f;
+        if ( yaw < -6.28f )
+            yaw += 6.28f;
+    };
+    void addPitch(float dpitch) {
+        pitch += dpitch;
+        if ( pitch > 1.2f ) pitch -= dpitch;
+        if ( pitch < -1.2f ) pitch -= dpitch;
+    };
+    void zeroYawPitch() { yaw = pitch = 0; };
 };
 
 class Node
@@ -74,9 +96,6 @@ public:
     void forget_edge(Node* node);
 
     void update_coords();
-
-    // void display_self(sf::RenderWindow& window, float scale);
-    // void display_edges(sf::RenderWindow& window, float scale);
 
     std::vector<int> getValues() { return values; };
     std::vector<Node*> getEdges() { return edges; };

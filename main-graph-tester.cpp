@@ -26,21 +26,15 @@ int main() {
     // WINDOW
     // return 0;
 
-    sf::Clock clock;
-    clock.restart();
+    g.update_nodes();
 
-    // sf::Font font;
-    // if ( !font.loadFromFile("arialmt.ttf") )
-    //     return -1;
-        
-    // sf::Text text;
-    // text.setFont(font);
-    // text.setCharacterSize(40);
-    // text.setFillColor(sf::Color::White);
-    // text.setPosition(20.f, 20.f);
+    // sf::Clock clock;
+    // clock.restart();
     
     sf::RenderWindow window(sf::VideoMode(1200, 800), "Test window (press ESC)");
-    window.setFramerateLimit(20);
+    window.setFramerateLimit(60);
+
+    const float delta_angle = 0.03;
 
     while (window.isOpen())
     {
@@ -52,26 +46,28 @@ int main() {
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape)
                     window.close();
+                if (event.key.code == sf::Keyboard::R)
+                    g.zeroYawPitch();
             }
         }
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-            g.yaw += 0.02;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-            g.yaw -= 0.02;
+            g.addYaw( delta_angle );
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+            g.addYaw( - delta_angle );
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-            g.pitch += 0.02;
+            g.addPitch( delta_angle );
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-            g.pitch -= 0.02;
+            g.addPitch( - delta_angle );
 
         window.clear(sf::Color(3, 16, 25));
 
-        if ( clock.getElapsedTime().asMilliseconds() >= 200 ) {
-            clock.restart();
-            g.update_nodes();
-        }
+        // if ( clock.getElapsedTime().asMilliseconds() >= 2000 ) {
+            // clock.restart();
+            // g.update_nodes();
+        // }
         
-        g.display(window, 100);
+        g.display(window, 200);
         
         window.display();
     }
