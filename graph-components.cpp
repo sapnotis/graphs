@@ -263,25 +263,24 @@ void Graph::display(sf::RenderWindow& window) {
     POV += (small_corner * 0.5f);
     POV += (big_corner * 0.5f);
 
+    float maxwidth = big_corner.x - small_corner.x;
+    if ( big_corner.y - small_corner.y > maxwidth ) maxwidth = big_corner.y - small_corner.y;
+    if ( big_corner.z - small_corner.z > maxwidth ) maxwidth = big_corner.z - small_corner.z;
+    float scale = 1.35f * window_center.y / maxwidth;
+
     closest_farthest_z = {0, 0};
     for ( int i = 0; i < 8; i++ ) {
         xyz corner_window_coords = calc_window_coords(
             { (i % 2) * small_corner.x + !(i % 2) * big_corner.x,
             (i/2 % 2) * small_corner.y + !(i/2 % 2) * big_corner.y,
             (i/4 % 8) * small_corner.z + !(i/4 % 2) * big_corner.z },
-            1 );
+            scale );
             
         if ( corner_window_coords.z > closest_farthest_z.x )
             closest_farthest_z.x = corner_window_coords.z;
         if ( corner_window_coords.z < closest_farthest_z.y )
             closest_farthest_z.y = corner_window_coords.z;
     }
-
-    std::cout << closest_farthest_z.x - closest_farthest_z.y << std::endl;
-
-    float scale = 1.f * window_center.x / ( closest_farthest_z.x - closest_farthest_z.y );
-    std::cout << scale << std::endl;
-    closest_farthest_z *= ( scale );
 
     display_grid( window, scale );
 
@@ -365,7 +364,7 @@ xyz Graph::calc_window_coords(xyz coords, float scale) {
 };
 
 float Graph::perspective_multiplier(float z) {
-    float k = 1000.f * ( closest_farthest_z.x - closest_farthest_z.y );
+    float k = 5.f * ( closest_farthest_z.x - closest_farthest_z.y );
     return ( k / ( closest_farthest_z.x + k - z ) );
 };
 
