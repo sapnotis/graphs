@@ -19,11 +19,12 @@ private:
     const bool allow_multiple_edges; // meant to stay false (different moves of the same result are impossible)
     std::deque<Node> nodes;
 
-    xyz center;
+    xyz POV;
     xyz small_corner;
     xyz big_corner;
     float yaw;
     float pitch;
+    sf::Vector2f closest_farthest_z;
 public:
     Graph();
     ~Graph();
@@ -50,19 +51,20 @@ public:
 
     void update_nodes();
     
-    void display(sf::RenderWindow& window, float scale);
+    void display(sf::RenderWindow& window);
 
-    void display_point(sf::RenderWindow& window, sf::Vector2f point, float RadiusInPixels, sf::Color color);
-    void display_line(sf::RenderWindow& window, sf::Vector2f p1, sf::Vector2f p2, sf::Color color);
-    void display_line(sf::RenderWindow& window, sf::Vector2f p1, sf::Vector2f p2, sf::Color col1, sf::Color col2);
+    void display_point(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords, float RadiusInPixels, sf::Color color);
+    void display_line(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2, sf::Color color);
+    void display_line(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2, sf::Color col1, sf::Color col2);
 
     void addYaw(float dyaw) { yaw += dyaw; };
     void addPitch(float dpitch) { pitch += dpitch; };
     void resetYawPitch() { yaw = pitch = 0; };
 
-    xyz calc_window_coords(xyz coords, float scale, sf::Vector2f window_center);
-    void display_node(sf::RenderWindow& window, xyz coords);
-    void display_edge(sf::RenderWindow& window, xyz c1, xyz c2);
+    xyz calc_window_coords(xyz coords, float scale);
+    float perspective_multiplier(float z);
+    void display_node(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords);
+    void display_edge(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2);
     void display_grid(sf::RenderWindow& window, float scale);
 };
 
@@ -92,8 +94,11 @@ public:
 
     // V3 and SFML
 
-    void reset_velocity() { velocity = {0, 0, 0}; };
+    void set_velocity(xyz vel) { velocity = vel; };
+    void set_coords(xyz crd) { coords = crd; };
     void add_velocity(xyz dvel) { velocity += dvel; };
+    void add_coords(xyz dcrd) { coords += dcrd; };
+
     void update_coords();
 };
 

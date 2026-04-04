@@ -7,28 +7,12 @@ int main() {
 
     Graph g;
 
-    for ( int i=1; i<7; i++ )
-        g.emplace_node( {i} );
-    
-    for ( int i : {5, 6} ) {
-        g.emplace_edge( {i}, {1} );
-        g.emplace_edge( {i}, {2} );
-        g.emplace_edge( {i}, {3} );
-        g.emplace_edge( {i}, {4} );
-    }
-
-    g.emplace_edge( {1}, {2} );
-    g.emplace_edge( {2}, {3} );
-    g.emplace_edge( {3}, {4} );
-    g.emplace_edge( {4}, {1} );
-
-    g.rollcall();
+    g.emplace_edge( g.emplace_node({1}), g.emplace_node({2}) );
+    g.emplace_edge( g.emplace_node({3}), g.findNode({1}) );
+    g.emplace_edge( g.findNode({2}), g.findNode({3}) );
 
     // WINDOW
     // return 0;
-
-    // sf::Clock clock;
-    // clock.restart();
     
     sf::RenderWindow window(sf::VideoMode(1200, 800), "Test window (press ESC)");
     window.setFramerateLimit(50);
@@ -52,6 +36,9 @@ int main() {
                     window.close();
                 if (event.key.code == sf::Keyboard::R)
                     g.resetYawPitch();
+                if (event.key.code == sf::Keyboard::S)
+                    for ( Node* tmp : g.getNodes() )
+                        tmp->set_coords(xyz_rnd_direction(1.f));
             }
         }
 
@@ -65,14 +52,9 @@ int main() {
             g.addPitch( - delta_angle );
 
         window.clear(sf::Color(3, 16, 25));
-
-        // if ( clock.getElapsedTime().asMilliseconds() >= 2000 ) {
-            // clock.restart();
-            // g.update_nodes();
-        // }
         
         g.update_nodes();
-        g.display(window, 400);
+        g.display(window);
         
         window.display();
     }
