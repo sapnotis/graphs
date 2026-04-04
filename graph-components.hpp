@@ -92,7 +92,8 @@ public:
 
     // V3 and SFML
 
-    void update_velocity();
+    void reset_velocity() { velocity = {0, 0, 0}; };
+    void add_velocity(xyz dvel) { velocity += dvel; };
     void update_coords();
 };
 

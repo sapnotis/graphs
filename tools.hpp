@@ -9,7 +9,11 @@ struct xyz
     float y;
     float z;
 
-    void display();
+    void print();
+
+    xyz operator-(const xyz& other) const {
+        return {x - other.x, y - other.y, z - other.z};
+    };
 
     xyz& operator+=(const xyz& other) {
         x += other.x; y += other.y; z += other.z;
@@ -33,6 +37,8 @@ struct xyz
 
 xyz xyz_rnd_direction(float amplitude);
 
-sf::Color color_of_depth(float depth);
+float dist_squared(xyz delta);
+
+// sf::Color color_of_depth(float depth);
 
 #endif

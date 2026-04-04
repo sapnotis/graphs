@@ -5,7 +5,7 @@
 
 #include <random>
 
-void xyz::display() {
+void xyz::print() {
     std::cout << x << " " << y << " " << z << std::endl;
 }
 
@@ -33,8 +33,16 @@ xyz xyz_rnd_direction(float amplitude) {
     return dir;
 }
 
-sf::Color color_of_depth(float depth) {
-    sf::Color color;
-    color.r = color.g = color.b = 200 + (int)(depth) * 0; // 4 -Werror=unused-parameter
-    return color;
+float dist_squared(xyz delta) {
+    return (
+        delta.x * delta.x
+        + delta.y * delta.y
+        + delta.z * delta.z
+    );
 };
+
+// sf::Color color_of_depth(float depth) {
+//     sf::Color color;
+//     color.r = color.g = color.b = 200 + (int)(depth) * 0; // 4 -Werror=unused-parameter
+//     return color;
+// };

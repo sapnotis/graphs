@@ -7,34 +7,33 @@ int main() {
 
     Graph g;
 
-    g.emplace_node( {0, 0} );
+    for ( int i=1; i<7; i++ )
+        g.emplace_node( {i} );
+    
+    for ( int i : {5, 6} ) {
+        g.emplace_edge( {i}, {1} );
+        g.emplace_edge( {i}, {2} );
+        g.emplace_edge( {i}, {3} );
+        g.emplace_edge( {i}, {4} );
+    }
 
-    g.emplace_edge( {0, 0}, g.emplace_node({1, 1}) );
-    g.emplace_edge( g.emplace_node({1, 2}), {1, 1} );
-
-    g.emplace_edge( {0, 0}, g.emplace_node({2, 1}) );
-    g.emplace_edge( {2, 1}, g.emplace_node({2, 2}) );
-
-    g.emplace_edge( {0, 0}, g.emplace_node({3, 1}) );
-    g.emplace_edge( {3, 1}, g.emplace_node({3, 2}) );
-
-    g.emplace_edge( {0, 0}, g.emplace_node({4, 1}) );
-    g.emplace_edge( {4, 1}, g.emplace_node({4, 2}) );
+    g.emplace_edge( {1}, {2} );
+    g.emplace_edge( {2}, {3} );
+    g.emplace_edge( {3}, {4} );
+    g.emplace_edge( {4}, {1} );
 
     g.rollcall();
 
     // WINDOW
     // return 0;
 
-    g.update_nodes();
-
     // sf::Clock clock;
     // clock.restart();
     
     sf::RenderWindow window(sf::VideoMode(1200, 800), "Test window (press ESC)");
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(50);
 
-    const float delta_angle = 0.03;
+    const float delta_angle = 0.05;
 
     while (window.isOpen())
     {
@@ -72,7 +71,8 @@ int main() {
             // g.update_nodes();
         // }
         
-        g.display(window, 200);
+        g.update_nodes();
+        g.display(window, 400);
         
         window.display();
     }
