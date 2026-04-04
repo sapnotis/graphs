@@ -46,34 +46,24 @@ public:
     std::vector<Node*> getNodes();
     void rollcall();
 
+    // V3 and SFML
+
     void update_nodes();
     
-    xyz calc_window_coords(xyz coords, float scale, xy window_center);
-    void display_node(sf::RenderWindow& window, float scale, xyz coords);
-    void display_edge(sf::RenderWindow& window, xyz p1, xyz p2);
-
-    void display_point(sf::RenderWindow& window, float scale, xyz point, sf::Color color);
-    void display_point(sf::RenderWindow& window, float scale, xy point, sf::Color color);
-
-    void display_line(sf::RenderWindow& window, xy p1, xy p2, sf::Color color);
-    void display_line(sf::RenderWindow& window, xy p1, xy p2, sf::Color col1, sf::Color col2);
-
-    void display_grid(sf::RenderWindow& window, float scale);
     void display(sf::RenderWindow& window, float scale);
 
-    void addYaw(float dyaw) {
-        yaw += dyaw;
-        if ( yaw > 6.28f )
-            yaw -= 6.28f;
-        if ( yaw < -6.28f )
-            yaw += 6.28f;
-    };
-    void addPitch(float dpitch) {
-        pitch += dpitch;
-        if ( pitch > 1.2f ) pitch -= dpitch;
-        if ( pitch < -1.2f ) pitch -= dpitch;
-    };
-    void zeroYawPitch() { yaw = pitch = 0; };
+    void display_point(sf::RenderWindow& window, sf::Vector2f point, float RadiusInPixels, sf::Color color);
+    void display_line(sf::RenderWindow& window, sf::Vector2f p1, sf::Vector2f p2, sf::Color color);
+    void display_line(sf::RenderWindow& window, sf::Vector2f p1, sf::Vector2f p2, sf::Color col1, sf::Color col2);
+
+    void addYaw(float dyaw) { yaw += dyaw; };
+    void addPitch(float dpitch) { pitch += dpitch; };
+    void resetYawPitch() { yaw = pitch = 0; };
+
+    xyz calc_window_coords(xyz coords, float scale, sf::Vector2f window_center);
+    void display_node(sf::RenderWindow& window, xyz coords);
+    void display_edge(sf::RenderWindow& window, xyz c1, xyz c2);
+    void display_grid(sf::RenderWindow& window, float scale);
 };
 
 class Node
@@ -82,6 +72,7 @@ private:
     std::vector<int> values;
     std::vector<Node*> edges;
     xyz coords;
+    xyz velocity;
 public:
     bool checked;
     
@@ -95,11 +86,14 @@ public:
     bool find_edge(Node* node);
     void forget_edge(Node* node);
 
-    void update_coords();
-
     std::vector<int> getValues() { return values; };
     std::vector<Node*> getEdges() { return edges; };
     xyz getCoords() const { return coords; };
+
+    // V3 and SFML
+
+    void update_velocity();
+    void update_coords();
 };
 
 #endif

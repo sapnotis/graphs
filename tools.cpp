@@ -9,10 +9,6 @@ void xyz::display() {
     std::cout << x << " " << y << " " << z << std::endl;
 }
 
-void xy::display() {
-    std::cout << x << " " << y << std::endl;
-}
-
 xyz xyz_rnd_direction(float amplitude) {
 
     if ( !amplitude )

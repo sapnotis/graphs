@@ -31,14 +31,6 @@ struct xyz
     };
 };
 
-struct xy
-{
-    float x;
-    float y;
-
-    void display();
-};
-
 xyz xyz_rnd_direction(float amplitude);
 
 sf::Color color_of_depth(float depth);

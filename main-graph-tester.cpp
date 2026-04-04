@@ -43,11 +43,16 @@ int main() {
             if (event.type == sf::Event::Closed)
                 window.close();
 
+            if (event.type == sf::Event::Resized) {
+                sf::FloatRect visibleArea(0, 0, event.size.width, event.size.height);
+                window.setView(sf::View(visibleArea));
+            }
+
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape)
                     window.close();
                 if (event.key.code == sf::Keyboard::R)
-                    g.zeroYawPitch();
+                    g.resetYawPitch();
             }
         }
 
