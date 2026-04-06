@@ -28,7 +28,6 @@ private:
 public:
     Graph();
     ~Graph();
-    bool is_corrupted() const;
 
     Node* emplace_node(std::vector<int> values);
 
@@ -54,7 +53,6 @@ public:
     void display(sf::RenderWindow& window);
 
     void display_point(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords, float RadiusInPixels, sf::Color color);
-    void display_line(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2, sf::Color color);
     void display_line(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2, sf::Color col1, sf::Color col2);
 
     void addYaw(float dyaw) { yaw += dyaw; };
@@ -63,8 +61,6 @@ public:
 
     xyz calc_window_coords(xyz coords, float scale);
     float perspective_multiplier(float z);
-    void display_node(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords);
-    void display_edge(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2);
     void display_grid(sf::RenderWindow& window, float scale);
 };
 
@@ -75,6 +71,7 @@ private:
     std::vector<Node*> edges;
     xyz coords;
     xyz velocity;
+    sf::Color color;
 public:
     bool checked;
 
@@ -94,6 +91,7 @@ public:
     std::vector<Node*> getEdges() { return edges; };
     xyz getCoords() const { return coords; };
     xyz getVelocity() const { return velocity; };
+    sf::Color getColor() const { return color; }
 
     // V3 and SFML
 
@@ -101,6 +99,7 @@ public:
     void set_coords(xyz crd) { coords = crd; };
     void add_velocity(xyz dvel) { velocity += dvel; };
     void add_coords(xyz dcrd) { coords += dcrd; };
+    void set_color(sf::Color col) { color = col; };
 
     void update_coords();
 };

@@ -4,13 +4,21 @@
 #include <chrono>
 
 int main() {
-    std::cout << "When I grow up I will become a graph visualiser!" << std::endl;
+    std::cout << "Preparing graph..." << std::endl;
 
     Graph g;
 
-    int count = 1;
     g.emplace_node({1});
 
+    int count = 1;
+    for ( unsigned int i=0; i<10; i++ ) {
+        g.emplace_edge( {count}, g.emplace_node({count+1}) );
+        g.emplace_edge( {2-count}, g.emplace_node({1-count}) );
+        count++;
+    }
+
+    std::cout << "Preparing window..." << std::endl;
+    
     // WINDOW
 
     const int FPS = 50;
@@ -32,6 +40,8 @@ int main() {
     sf::Clock clock;
     clock.restart();
 
+    std::cout << "Running window..." << std::endl;
+
     while (window.isOpen())
     {
         sf::Event event;
@@ -50,7 +60,8 @@ int main() {
                 if (event.key.code == sf::Keyboard::R)
                     g.resetYawPitch();
                 if (event.key.code == sf::Keyboard::S)
-                    g.getNodes()[0] -> set_coords({0, 0, 0});
+                    for ( Node* tmp : g.getNodes() )
+                        tmp->set_coords(xyz_rnd_direction(5));
                 if (event.key.code == sf::Keyboard::A) {
                     g.emplace_edge( {count}, g.emplace_node({count+1}) );
                     g.emplace_edge( {2-count}, g.emplace_node({1-count}) );

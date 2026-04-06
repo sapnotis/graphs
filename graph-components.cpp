@@ -149,10 +149,10 @@ void Graph::rollcall() {
 }
 
 Node::Node(std::vector<int> values)
-    : values(values), coords(xyz_rnd_direction(1.f)), velocity({0, 0, 0}), checked(false) { };
+    : values(values), coords(xyz_rnd_direction(1.f)), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
 
 Node::Node(std::vector<int> values, xyz coords)
-    : values(values), coords(coords), velocity({0, 0, 0}), checked(false) { };
+    : values(values), coords(coords), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
 
 Node::~Node() { };
 
@@ -201,34 +201,41 @@ void Graph::update_nodes() {
 
 
         
-    float r = 0.1;
+    float r = 0.1f;
     float k = 0.5f * r;
     unsigned int number_of_nodes = nodes.size();
     
     // O(N^2) alarm
-    for ( unsigned int i = 0; i < number_of_nodes; i++ )
-        for ( unsigned int j = i+1; j < number_of_nodes; j++ ) {
-            xyz delta_xyz = nodes[j].getCoords() - nodes[i].getCoords();
-            xyz delta_velocity = delta_xyz * ( r / len_squared(delta_xyz) );
-            nodes[j].add_velocity( delta_velocity );
-            nodes[i].add_velocity( delta_velocity * (-1) );
+    for ( auto first = nodes.begin(); first != nodes.end(); first++ )
+        for ( auto second = first+1; second != nodes.end(); second++ ) {
+            xyz delta_xyz = first->getCoords() - second->getCoords();
+            float delta_len_squared = len_squared(delta_xyz);
+            if ( delta_len_squared == 0 )
+                delta_len_squared = 1;
+
+            xyz delta_velocity = delta_xyz * ( r / delta_len_squared );
+            first->add_velocity( delta_velocity );
+            second->add_velocity( delta_velocity * (-1) );
         }
     
-    for ( unsigned int i = 0; i < number_of_nodes; i++ )
-        for ( Node* neighbour : nodes[i].getEdges() ) {
-            xyz delta_xyz = neighbour->getCoords() - nodes[i].getCoords();
-            xyz delta_velocity = delta_xyz * ( -k * std::sqrt( len_squared(delta_xyz) ) );
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
+        for ( Node* neighbour : node->getEdges() ) {
+            xyz delta_xyz = neighbour->getCoords() - node->getCoords();
+            float delta_len_squared = len_squared(delta_xyz);
+
+            xyz delta_velocity = delta_xyz * ( -k * std::sqrt(delta_len_squared) );
             neighbour->add_velocity( delta_velocity );
-            nodes[i].add_velocity( delta_velocity * (-1) );
+            node->add_velocity( delta_velocity * (-1) );
         }
     // O(N^2) alarm end
 
-    Node::max_velocity = 0;
+    // find maximum velocity of the tick
+    // Node::max_velocity = 0;
 
     for ( unsigned int i = 0; i < number_of_nodes; i++ )
         nodes[i].update_coords();
-
-    std::cout << Node::max_velocity << std::endl;
+    
+    // std::cout << Node::max_velocity << std::endl;
 };
 
 void Graph::display(sf::RenderWindow& window) {
@@ -303,11 +310,11 @@ void Graph::display(sf::RenderWindow& window) {
 
     for ( unsigned int i = 0; i < number_of_nodes; i++ ) {
 
-        display_node( window, window_center, nodes_window_coords[ &nodes[i] ] );
+        display_point( window, window_center, nodes_window_coords[ &nodes[i] ], 4, nodes[i].getColor() );
 
         std::vector<Node*> neighbours = nodes[i].getEdges();
         for ( unsigned int j = 0; j < neighbours.size(); j++ )
-            display_edge( window, window_center, nodes_window_coords[ &nodes[i] ], nodes_window_coords[ neighbours[j] ] );
+            display_line( window, window_center, nodes_window_coords[ &nodes[i] ], nodes_window_coords[ neighbours[j] ], nodes[i].getColor(), neighbours[j]->getColor() );
     }
 
 };
@@ -323,10 +330,6 @@ void Graph::display_point(sf::RenderWindow& window, sf::Vector2f window_center, 
     circle.setFillColor(color);
     circle.setPosition( sf::Vector2f({coords.x, coords.y}) + window_center );
     window.draw(circle);
-};
-
-void Graph::display_line(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2, sf::Color color) {
-    display_line( window, window_center, c1, c2, color, color );
 };
 
 void Graph::display_line(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2, sf::Color col1, sf::Color col2) {
@@ -374,14 +377,6 @@ float Graph::perspective_multiplier(float z) {
     return ( k / ( closest_farthest_z.x + k - z ) );
 };
 
-void Graph::display_node(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords) {
-    display_point( window, window_center, coords, 4, sf::Color::White );
-};
-
-void Graph::display_edge(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2) {
-    display_line( window, window_center, c1, c2, sf::Color::White );
-};
-
 void Graph::display_grid(sf::RenderWindow& window, float scale) {
 
     sf::Color grid_color = sf::Color::Blue;
@@ -402,13 +397,13 @@ void Graph::display_grid(sf::RenderWindow& window, float scale) {
     }
 
     for ( int i = 0; i < 4; i ++ )
-        display_line( window, window_center, corners[i], corners[i+4], grid_color );
+        display_line( window, window_center, corners[i], corners[i+4], grid_color, grid_color );
     for ( int i = 0; i < 4; i ++ )
-        display_line( window, window_center, corners[2*i], corners[2*i+1], grid_color );
+        display_line( window, window_center, corners[2*i], corners[2*i+1], grid_color, grid_color );
     for ( int i = 0; i < 2; i ++ )
-        display_line( window, window_center, corners[i], corners[i+2], grid_color );
+        display_line( window, window_center, corners[i], corners[i+2], grid_color, grid_color );
     for ( int i = 4; i < 6; i ++ )
-        display_line( window, window_center, corners[i], corners[i+2], grid_color );
+        display_line( window, window_center, corners[i], corners[i+2], grid_color, grid_color );
 
     xyz center_window_coords = calc_window_coords( POV, scale );
     display_point( window, window_center, center_window_coords, 4, grid_color );
@@ -416,17 +411,20 @@ void Graph::display_grid(sf::RenderWindow& window, float scale) {
 
 void Node::update_coords() {
 
-    float vel_limit = 10;
+    float vel_limit = 0.8f;
 
     if ( len_squared(velocity) > vel_limit*vel_limit ) {
         float k = vel_limit / std::sqrt( len_squared(velocity) );
         velocity.x *= k; velocity.y*= k; velocity.z*= k;
+        color = sf::Color::Red;
+    }
+    else {
+        color = sf::Color::White;
     }
 
     if ( max_velocity < std::sqrt( len_squared(velocity) ) )
         max_velocity = std::sqrt( len_squared(velocity) );
 
     coords += velocity;
-    velocity *= 0.60f;
-    
+    velocity *= 0.7f;
 };
