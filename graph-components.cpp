@@ -200,8 +200,8 @@ void Graph::update_nodes() {
         nodes[i].add_coords( center_mass );
 
 
-
-    float r = 0.01;
+        
+    float r = 0.1;
     float k = 0.5f * r;
     unsigned int number_of_nodes = nodes.size();
     
@@ -209,20 +209,26 @@ void Graph::update_nodes() {
     for ( unsigned int i = 0; i < number_of_nodes; i++ )
         for ( unsigned int j = i+1; j < number_of_nodes; j++ ) {
             xyz delta_xyz = nodes[j].getCoords() - nodes[i].getCoords();
-            nodes[j].add_velocity( delta_xyz * ( r / dist_squared(delta_xyz) ) );
-            nodes[i].add_velocity( delta_xyz * ( -r / dist_squared(delta_xyz) ) );
+            xyz delta_velocity = delta_xyz * ( r / len_squared(delta_xyz) );
+            nodes[j].add_velocity( delta_velocity );
+            nodes[i].add_velocity( delta_velocity * (-1) );
         }
     
     for ( unsigned int i = 0; i < number_of_nodes; i++ )
         for ( Node* neighbour : nodes[i].getEdges() ) {
             xyz delta_xyz = neighbour->getCoords() - nodes[i].getCoords();
-            neighbour->add_velocity( delta_xyz * ( -k * std::sqrt( dist_squared(delta_xyz) ) ) );
-            nodes[i].add_velocity( delta_xyz * ( k * std::sqrt( dist_squared(delta_xyz) ) ) );
+            xyz delta_velocity = delta_xyz * ( -k * std::sqrt( len_squared(delta_xyz) ) );
+            neighbour->add_velocity( delta_velocity );
+            nodes[i].add_velocity( delta_velocity * (-1) );
         }
     // O(N^2) alarm end
-    
+
+    Node::max_velocity = 0;
+
     for ( unsigned int i = 0; i < number_of_nodes; i++ )
         nodes[i].update_coords();
+
+    std::cout << Node::max_velocity << std::endl;
 };
 
 void Graph::display(sf::RenderWindow& window) {
@@ -259,6 +265,7 @@ void Graph::display(sf::RenderWindow& window) {
             big_corner.z = tmp_coords.z;
     }
 
+    // POV value
     POV = {0, 0, 0};
     POV += (small_corner * 0.5f);
     POV += (big_corner * 0.5f);
@@ -266,7 +273,7 @@ void Graph::display(sf::RenderWindow& window) {
     float maxwidth = big_corner.x - small_corner.x;
     if ( big_corner.y - small_corner.y > maxwidth ) maxwidth = big_corner.y - small_corner.y;
     if ( big_corner.z - small_corner.z > maxwidth ) maxwidth = big_corner.z - small_corner.z;
-    float scale = 1.35f * window_center.y / maxwidth;
+    float scale = 1.5f * window_center.y / maxwidth;
 
     closest_farthest_z = {0, 0};
     for ( int i = 0; i < 8; i++ ) {
@@ -360,16 +367,15 @@ xyz Graph::calc_window_coords(xyz coords, float scale) {
     final_coords.z = final_coords.z * scale;
 
     return final_coords;
-
 };
 
 float Graph::perspective_multiplier(float z) {
-    float k = 5.f * ( closest_farthest_z.x - closest_farthest_z.y );
+    float k = 2000.f;
     return ( k / ( closest_farthest_z.x + k - z ) );
 };
 
 void Graph::display_node(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords) {
-    display_point( window, window_center, coords, 5, sf::Color::White );
+    display_point( window, window_center, coords, 4, sf::Color::White );
 };
 
 void Graph::display_edge(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2) {
@@ -405,12 +411,22 @@ void Graph::display_grid(sf::RenderWindow& window, float scale) {
         display_line( window, window_center, corners[i], corners[i+2], grid_color );
 
     xyz center_window_coords = calc_window_coords( POV, scale );
-    display_point( window, window_center, center_window_coords, 3, grid_color );
+    display_point( window, window_center, center_window_coords, 4, grid_color );
 };
 
 void Node::update_coords() {
 
+    float vel_limit = 10;
+
+    if ( len_squared(velocity) > vel_limit*vel_limit ) {
+        float k = vel_limit / std::sqrt( len_squared(velocity) );
+        velocity.x *= k; velocity.y*= k; velocity.z*= k;
+    }
+
+    if ( max_velocity < std::sqrt( len_squared(velocity) ) )
+        max_velocity = std::sqrt( len_squared(velocity) );
+
     coords += velocity;
-    set_velocity({0, 0, 0});
+    velocity *= 0.60f;
     
 };

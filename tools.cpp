@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 
 #include <random>
+#include <cmath>
 
 void xyz::print() {
     std::cout << x << " " << y << " " << z << std::endl;
@@ -33,7 +34,7 @@ xyz xyz_rnd_direction(float amplitude) {
     return dir;
 }
 
-float dist_squared(xyz delta) {
+float len_squared(xyz delta) {
     return (
         delta.x * delta.x
         + delta.y * delta.y

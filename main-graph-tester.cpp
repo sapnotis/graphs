@@ -1,23 +1,36 @@
 #include <iostream>
 #include <string>
 #include "graph-components.hpp"
+#include <chrono>
 
 int main() {
     std::cout << "When I grow up I will become a graph visualiser!" << std::endl;
 
     Graph g;
 
-    g.emplace_edge( g.emplace_node({1}), g.emplace_node({2}) );
-    g.emplace_edge( g.emplace_node({3}), g.findNode({1}) );
-    g.emplace_edge( g.findNode({2}), g.findNode({3}) );
+    int count = 1;
+    g.emplace_node({1});
 
     // WINDOW
-    // return 0;
-    
-    sf::RenderWindow window(sf::VideoMode(1200, 800), "Test window (press ESC)");
-    window.setFramerateLimit(50);
 
+    const int FPS = 50;
+    int frame = 0;
     const float delta_angle = 0.05;
+    
+    sf::RenderWindow window(sf::VideoMode( 1600, 900 ), "SFML Window");
+    window.setFramerateLimit(FPS);
+
+    sf::Font font;
+    if ( !font.loadFromFile("arialmt.ttf") )
+        return -1;
+    sf::Text text;
+    text.setFont(font);
+    text.setCharacterSize(30);
+    text.setFillColor(sf::Color::White);
+    text.setPosition(20.f, 20.f);
+
+    sf::Clock clock;
+    clock.restart();
 
     while (window.isOpen())
     {
@@ -37,8 +50,12 @@ int main() {
                 if (event.key.code == sf::Keyboard::R)
                     g.resetYawPitch();
                 if (event.key.code == sf::Keyboard::S)
-                    for ( Node* tmp : g.getNodes() )
-                        tmp->set_coords(xyz_rnd_direction(1.f));
+                    g.getNodes()[0] -> set_coords({0, 0, 0});
+                if (event.key.code == sf::Keyboard::A) {
+                    g.emplace_edge( {count}, g.emplace_node({count+1}) );
+                    g.emplace_edge( {2-count}, g.emplace_node({1-count}) );
+                    count++;
+                }
             }
         }
 
@@ -52,7 +69,18 @@ int main() {
             g.addPitch( - delta_angle );
 
         window.clear(sf::Color(3, 16, 25));
+
+        frame++;
+
+        if ( frame >= FPS ) {
+            frame = 0;
+            float LagRatio = 0.001f * clock.restart().asMilliseconds();
+            text.setString( "Lag ratio:\n" + std::to_string( LagRatio )
+                + "\nNodes:\n" + std::to_string(2*count-1) );
+        }
         
+        window.draw(text);
+
         g.update_nodes();
         g.display(window);
         

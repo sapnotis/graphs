@@ -77,6 +77,8 @@ private:
     xyz velocity;
 public:
     bool checked;
+
+    inline static float max_velocity = 0; // debug
     
     Node(std::vector<int> values);
     Node(std::vector<int> values, xyz coords);
@@ -91,6 +93,7 @@ public:
     std::vector<int> getValues() { return values; };
     std::vector<Node*> getEdges() { return edges; };
     xyz getCoords() const { return coords; };
+    xyz getVelocity() const { return velocity; };
 
     // V3 and SFML
 

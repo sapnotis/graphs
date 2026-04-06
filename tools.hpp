@@ -37,7 +37,7 @@ struct xyz
 
 xyz xyz_rnd_direction(float amplitude);
 
-float dist_squared(xyz delta);
+float len_squared(xyz delta);
 
 // sf::Color color_of_depth(float depth);
 
