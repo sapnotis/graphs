@@ -4,14 +4,10 @@
 #include <SFML/Graphics.hpp>
 
 #include <random>
-// #include <chrono>
+#include <cmath>
 
-void xyz::display() {
+void xyz::print() {
     std::cout << x << " " << y << " " << z << std::endl;
-}
-
-void xy::display() {
-    std::cout << x << " " << y << std::endl;
 }
 
 xyz xyz_rnd_direction(float amplitude) {
@@ -38,13 +34,16 @@ xyz xyz_rnd_direction(float amplitude) {
     return dir;
 }
 
-xy window_xy(xy coords, float scale) {
-	xy disp;
-
-    disp.x = 1200 / 2;
-    disp.x += scale * coords.x;
-    disp.y = 800 / 2;
-    disp.y += scale * coords.y;
-	
-    return disp;
+float len_squared(xyz delta) {
+    return (
+        delta.x * delta.x
+        + delta.y * delta.y
+        + delta.z * delta.z
+    );
 };
+
+// sf::Color color_of_depth(float depth) {
+//     sf::Color color;
+//     color.r = color.g = color.b = 200 + (int)(depth) * 0; // 4 -Werror=unused-parameter
+//     return color;
+// };

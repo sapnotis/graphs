@@ -2,11 +2,15 @@
 
 #include <deque>
 #include <vector>
+#include <map>
+#include <cmath>
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-Graph::Graph() : allow_equal_nodes(false), allow_multiple_edges(false) { };
+Graph::Graph() : allow_equal_nodes(false), allow_multiple_edges(false),
+    POV({0, 0, 0}), small_corner({0, 0, 0}), big_corner({0, 0, 0}),
+    yaw(0), pitch(0), closest_farthest_z({0, 0}) { };
 
 Graph::~Graph() { };
 
@@ -105,15 +109,6 @@ void Graph::erase_edge(Node* f, Node* s) {
     s->forget_edge( f );
 };
 
-std::vector<Node*> Graph::getNodes() {
-    std::vector<Node*> node_ptrs;
-
-    for ( unsigned int i = 0; i < nodes.size(); i++ )
-        node_ptrs.push_back( &nodes[i] );
-
-    return node_ptrs;
-};
-
 Node* Graph::findNode(std::vector<int> values) {
     Node tmp_node(values);
 
@@ -126,6 +121,15 @@ Node* Graph::findNode(std::vector<int> values) {
     }
     return nullptr;
 }
+
+std::vector<Node*> Graph::getNodes() {
+    std::vector<Node*> node_ptrs;
+
+    for ( unsigned int i = 0; i < nodes.size(); i++ )
+        node_ptrs.push_back( &nodes[i] );
+
+    return node_ptrs;
+};
 
 void Graph::rollcall() {
     std::cout << std::endl;
@@ -144,12 +148,11 @@ void Graph::rollcall() {
     std::cout << std::endl;
 }
 
-
 Node::Node(std::vector<int> values)
-    : values(values), coords({0, 0, 0}), screen_coords({0, 0, 0}), checked(false) { };
+    : values(values), coords(xyz_rnd_direction(1.f)), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
 
 Node::Node(std::vector<int> values, xyz coords)
-    : values(values), coords(coords), screen_coords({0, 0, 0}), checked(false) { };
+    : values(values), coords(coords), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
 
 Node::~Node() { };
 
@@ -183,89 +186,245 @@ void Node::forget_edge(Node* node) {
     std::cout << "(!) Node couldn't forget edge" << std::endl;
 };
 
-// SFML
+// V3 and SFML
 
 void Graph::update_nodes() {
 
-    unsigned int len = nodes.size();
-    for ( unsigned int i=0; i < len; i++ ) {
-        nodes[i].update_coords();
-        nodes[i].update_screen_coords();
-    }
+    xyz center_mass = {0, 0, 0};
+    for ( Node tmp : nodes )
+        center_mass += tmp.getCoords();
+    
+    center_mass *= ( -1.f / nodes.size() );
+    
+    for ( unsigned int i = 0; i < nodes.size(); i++ )
+        nodes[i].add_coords( center_mass );
 
+
+        
+    float r = 0.1f;
+    float k = 0.5f * r;
+    unsigned int number_of_nodes = nodes.size();
+    
+    // O(N^2) alarm
+    for ( auto first = nodes.begin(); first != nodes.end(); first++ )
+        for ( auto second = first+1; second != nodes.end(); second++ ) {
+            xyz delta_xyz = first->getCoords() - second->getCoords();
+            float delta_len_squared = len_squared(delta_xyz);
+            if ( delta_len_squared == 0 )
+                delta_len_squared = 1;
+
+            xyz delta_velocity = delta_xyz * ( r / delta_len_squared );
+            first->add_velocity( delta_velocity );
+            second->add_velocity( delta_velocity * (-1) );
+        }
+    
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
+        for ( Node* neighbour : node->getEdges() ) {
+            xyz delta_xyz = neighbour->getCoords() - node->getCoords();
+            float delta_len_squared = len_squared(delta_xyz);
+
+            xyz delta_velocity = delta_xyz * ( -k * std::sqrt(delta_len_squared) );
+            neighbour->add_velocity( delta_velocity );
+            node->add_velocity( delta_velocity * (-1) );
+        }
+    // O(N^2) alarm end
+
+    // find maximum velocity of the tick
+    // Node::max_velocity = 0;
+
+    for ( unsigned int i = 0; i < number_of_nodes; i++ )
+        nodes[i].update_coords();
+    
+    // std::cout << Node::max_velocity << std::endl;
 };
 
-// void Graph::update_observer_goal();
-// void Graph::update_observer();
+void Graph::display(sf::RenderWindow& window) {
 
-void Graph::display(sf::RenderWindow& window, float scale) {
+    // numbers describing to the graph as a whole
+    
+    if ( yaw > 6.28f ) yaw -= 6.28f;
+    if ( yaw < -6.28f ) yaw += 6.28f;
 
-    // unsigned int len = nodes.size();
-    // for ( unsigned int i=0; i < len; i++ ) {
-    //     nodes[i].display_self(window, scale);
-    //     nodes[i].display_edges(window, scale);
-    // }
+    if ( pitch > 1.57f ) pitch = 1.57f;
+    if ( pitch < -1.57f ) pitch = -1.57f;
+    
+    sf::Vector2f window_center = { 0.5f * window.getSize().x, 0.5f * window.getSize().y };
+    unsigned int number_of_nodes = nodes.size();
+    
+    small_corner = big_corner = {0, 0, 0};
 
     for ( Node tmp : nodes ) {
-        tmp.display_self(window, scale);
-        tmp.display_edges(window, scale);
+
+        xyz tmp_coords = tmp.getCoords();
+
+        if ( tmp_coords.x < small_corner.x )
+            small_corner.x = tmp_coords.x;
+        if ( tmp_coords.y < small_corner.y )
+            small_corner.y = tmp_coords.y;
+        if ( tmp_coords.z < small_corner.z )
+            small_corner.z = tmp_coords.z;
+        
+        if ( tmp_coords.x > big_corner.x )
+            big_corner.x = tmp_coords.x;
+        if ( tmp_coords.y > big_corner.y )
+            big_corner.y = tmp_coords.y;
+        if ( tmp_coords.z > big_corner.z )
+            big_corner.z = tmp_coords.z;
+    }
+
+    // POV value
+    POV = {0, 0, 0};
+    POV += (small_corner * 0.5f);
+    POV += (big_corner * 0.5f);
+
+    float maxwidth = big_corner.x - small_corner.x;
+    if ( big_corner.y - small_corner.y > maxwidth ) maxwidth = big_corner.y - small_corner.y;
+    if ( big_corner.z - small_corner.z > maxwidth ) maxwidth = big_corner.z - small_corner.z;
+    float scale = 1.5f * window_center.y / maxwidth;
+
+    closest_farthest_z = {0, 0};
+    for ( int i = 0; i < 8; i++ ) {
+        xyz corner_window_coords = calc_window_coords(
+            { (i % 2) * small_corner.x + !(i % 2) * big_corner.x,
+            (i/2 % 2) * small_corner.y + !(i/2 % 2) * big_corner.y,
+            (i/4 % 8) * small_corner.z + !(i/4 % 2) * big_corner.z },
+            scale );
+            
+        if ( corner_window_coords.z > closest_farthest_z.x )
+            closest_farthest_z.x = corner_window_coords.z;
+        if ( corner_window_coords.z < closest_farthest_z.y )
+            closest_farthest_z.y = corner_window_coords.z;
+    }
+
+    display_grid( window, scale );
+
+
+
+    // numbers describing each node
+
+    std::map<Node*, xyz> nodes_window_coords;
+
+    for ( unsigned int i = 0; i < number_of_nodes; i++ )
+        nodes_window_coords[ &nodes[i] ] =
+            calc_window_coords( nodes[i].getCoords(), scale );
+
+    for ( unsigned int i = 0; i < number_of_nodes; i++ ) {
+
+        display_point( window, window_center, nodes_window_coords[ &nodes[i] ], 4, nodes[i].getColor() );
+
+        std::vector<Node*> neighbours = nodes[i].getEdges();
+        for ( unsigned int j = 0; j < neighbours.size(); j++ )
+            display_line( window, window_center, nodes_window_coords[ &nodes[i] ], nodes_window_coords[ neighbours[j] ], nodes[i].getColor(), neighbours[j]->getColor() );
     }
 
 };
 
-void Node::update_coords() {
-
-    coords = xyz_rnd_direction(2);
+void Graph::display_point(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords, float RadiusInPixels, sf::Color color) {
     
-};
-
-void Node::update_screen_coords() {
-
-    screen_coords = coords;
-
-};
-
-void Node::display_self(sf::RenderWindow& window, float scale) {
-
-    float RadiusInPixels = 0.06 * scale;
-    sf::Color color = sf::Color::White;
-
-    if ( this->checked )
-        color = sf::Color(100, 100, 100);
+    // perspective
+    coords.x *= perspective_multiplier(coords.z);
+    coords.y *= perspective_multiplier(coords.z);
 
     sf::CircleShape circle(RadiusInPixels);
     circle.setOrigin(RadiusInPixels, RadiusInPixels);
     circle.setFillColor(color);
-    
-    // circle.setOutlineColor(sf::Color::White);
-    // circle.setOutlineThickness(1.f);
-
-    xy projection = {screen_coords.x, screen_coords.y};
-    xy dispCoords = window_xy(projection, scale);
-
-    circle.setPosition(dispCoords.x, dispCoords.y);
+    circle.setPosition( sf::Vector2f({coords.x, coords.y}) + window_center );
     window.draw(circle);
 };
 
-void Node::display_edges(sf::RenderWindow& window, float scale) {
+void Graph::display_line(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2, sf::Color col1, sf::Color col2) {
 
-    xy self_projection = {screen_coords.x, screen_coords.y};
-    xy self_dispCoords = window_xy(self_projection, scale);
+    // perspective
+    c1.x *= perspective_multiplier(c1.z);
+    c1.y *= perspective_multiplier(c1.z);
+    c2.x *= perspective_multiplier(c2.z);
+    c2.y *= perspective_multiplier(c2.z);
 
-    for ( Node* tmp : edges ) {
+    sf::Vertex line[] = {
+        sf::Vertex( sf::Vector2f({c1.x, c1.y}) + window_center ),
+        sf::Vertex( sf::Vector2f({c2.x, c2.y}) + window_center )
+    };
+    line[0].color = col1;
+    line[1].color = col2;
+    window.draw(line, 2, sf::Lines);
+};
 
-        xy next_projection = {tmp->getScreenCoords().x, tmp->getScreenCoords().y};
-        xy next_dispCoords = window_xy( next_projection, scale);
+xyz Graph::calc_window_coords(xyz coords, float scale) {
 
-        sf::Vertex line[] =
-        {
-            sf::Vertex(sf::Vector2f(self_dispCoords.x, self_dispCoords.y)),
-            sf::Vertex(sf::Vector2f(next_dispCoords.x, next_dispCoords.y))
-        };
+    coords -= POV;
 
-        line[0].color = sf::Color::White;
-        line[1].color = sf::Color::White;
+    xyz yaw_coords = {
+        coords.x * std::cos( yaw ) - coords.z * std::sin( yaw ),
+        coords.y,
+        coords.x * std::sin( yaw ) + coords.z * std::cos( yaw )
+    };
 
-        window.draw(line, 2, sf::Lines);
+    xyz final_coords = {
+        yaw_coords.x,
+        yaw_coords.y * std::cos( pitch ) - yaw_coords.z * std::sin( pitch ),
+        yaw_coords.y * std::sin( pitch ) + yaw_coords.z * std::cos( pitch )
+    };
+
+    final_coords.x = final_coords.x * scale;
+    final_coords.y = final_coords.y * scale;
+    final_coords.z = final_coords.z * scale;
+
+    return final_coords;
+};
+
+float Graph::perspective_multiplier(float z) {
+    float k = 2000.f;
+    return ( k / ( closest_farthest_z.x + k - z ) );
+};
+
+void Graph::display_grid(sf::RenderWindow& window, float scale) {
+
+    sf::Color grid_color = sf::Color::Blue;
+    sf::Vector2f window_center = { 0.5f * window.getSize().x, 0.5f * window.getSize().y };
+
+    // small_corner -= {0.5f, 0.5f, 0.5f};
+    // big_corner += {0.5f, 0.5f, 0.5f};
+
+    std::map<int, xyz> corners;
+
+    // big brain bool logic
+    for ( int i = 0; i < 8; i++ ) {
+        corners[i] = calc_window_coords(
+            { (i % 2) * small_corner.x + !(i % 2) * big_corner.x,
+            (i/2 % 2) * small_corner.y + !(i/2 % 2) * big_corner.y,
+            (i/4 % 8) * small_corner.z + !(i/4 % 2) * big_corner.z },
+            scale );
     }
+
+    for ( int i = 0; i < 4; i ++ )
+        display_line( window, window_center, corners[i], corners[i+4], grid_color, grid_color );
+    for ( int i = 0; i < 4; i ++ )
+        display_line( window, window_center, corners[2*i], corners[2*i+1], grid_color, grid_color );
+    for ( int i = 0; i < 2; i ++ )
+        display_line( window, window_center, corners[i], corners[i+2], grid_color, grid_color );
+    for ( int i = 4; i < 6; i ++ )
+        display_line( window, window_center, corners[i], corners[i+2], grid_color, grid_color );
+
+    xyz center_window_coords = calc_window_coords( POV, scale );
+    display_point( window, window_center, center_window_coords, 4, grid_color );
+};
+
+void Node::update_coords() {
+
+    float vel_limit = 0.8f;
+
+    if ( len_squared(velocity) > vel_limit*vel_limit ) {
+        float k = vel_limit / std::sqrt( len_squared(velocity) );
+        velocity.x *= k; velocity.y*= k; velocity.z*= k;
+        color = sf::Color::Red;
+    }
+    else {
+        color = sf::Color::White;
+    }
+
+    if ( max_velocity < std::sqrt( len_squared(velocity) ) )
+        max_velocity = std::sqrt( len_squared(velocity) );
+
+    coords += velocity;
+    velocity *= 0.7f;
 };

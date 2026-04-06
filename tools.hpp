@@ -9,19 +9,36 @@ struct xyz
     float y;
     float z;
 
-    void display();
-};
+    void print();
 
-struct xy
-{
-    float x;
-    float y;
+    xyz operator-(const xyz& other) const {
+        return {x - other.x, y - other.y, z - other.z};
+    };
 
-    void display();
+    xyz& operator+=(const xyz& other) {
+        x += other.x; y += other.y; z += other.z;
+        return *this;
+    };
+
+    xyz& operator-=(const xyz& other) {
+        x -= other.x; y -= other.y; z -= other.z;
+        return *this;
+    };
+
+    xyz& operator*=(const float scale) {
+        x *= scale; y *= scale; z *= scale;
+        return *this;
+    };
+
+    xyz operator*(const float scale) const {
+        return {x*scale, y*scale, z*scale};
+    };
 };
 
 xyz xyz_rnd_direction(float amplitude);
-// xy window_xy(xy coords, sf::RenderWindow& window, float scale);
-xy window_xy(xy coords, float scale);
+
+float len_squared(xyz delta);
+
+// sf::Color color_of_depth(float depth);
 
 #endif
