@@ -20,10 +20,10 @@ private:
     std::deque<Node> nodes;
 
     xyz POV;
-    xyz small_corner;
-    xyz big_corner;
     float yaw;
     float pitch;
+    xyz small_corner;
+    xyz big_corner;
     sf::Vector2f closest_farthest_z;
 public:
     Graph();

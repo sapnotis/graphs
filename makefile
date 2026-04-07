@@ -2,7 +2,7 @@ CC = g++
 CFLAGS = -Wall -Wextra -Wpedantic -Werror
 SFMLFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
 
-all: main
+all: clean main
 
 main: main-graph-tester.o tools.o graph-components.o
 	$(CC) main-graph-tester.o tools.o graph-components.o -o main $(CFLAGS) $(SFMLFLAGS)
@@ -19,4 +19,4 @@ graph-components.o:
 clean:
 	rm -f main-graph-tester.o tools.o graph-components.o main
 
-.PHONY: all clean
+.PHONY: all clean graph

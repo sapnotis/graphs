@@ -9,8 +9,8 @@
 #include <SFML/Graphics.hpp>
 
 Graph::Graph() : allow_equal_nodes(false), allow_multiple_edges(false),
-    POV({0, 0, 0}), small_corner({0, 0, 0}), big_corner({0, 0, 0}),
-    yaw(0), pitch(0), closest_farthest_z({0, 0}) { };
+    POV({0, 0, 0}), yaw(0), pitch(0),
+    small_corner({0, 0, 0}), big_corner({0, 0, 0}), closest_farthest_z({0, 0}) { };
 
 Graph::~Graph() { };
 
@@ -202,7 +202,7 @@ void Graph::update_nodes() {
 
         
     float r = 0.1f;
-    float k = 0.5f * r;
+    float k = 0.25f * r;
     unsigned int number_of_nodes = nodes.size();
     
     // O(N^2) alarm
@@ -280,7 +280,7 @@ void Graph::display(sf::RenderWindow& window) {
     float maxwidth = big_corner.x - small_corner.x;
     if ( big_corner.y - small_corner.y > maxwidth ) maxwidth = big_corner.y - small_corner.y;
     if ( big_corner.z - small_corner.z > maxwidth ) maxwidth = big_corner.z - small_corner.z;
-    float scale = 1.5f * window_center.y / maxwidth;
+    float scale = 1.8f * window_center.y / maxwidth;
 
     closest_farthest_z = {0, 0};
     for ( int i = 0; i < 8; i++ ) {
@@ -328,7 +328,7 @@ void Graph::display_point(sf::RenderWindow& window, sf::Vector2f window_center, 
     sf::CircleShape circle(RadiusInPixels);
     circle.setOrigin(RadiusInPixels, RadiusInPixels);
     circle.setFillColor(color);
-    circle.setPosition( sf::Vector2f({coords.x, coords.y}) + window_center );
+    circle.setPosition( window_center + sf::Vector2f({coords.x, -coords.y}) );
     window.draw(circle);
 };
 
@@ -341,8 +341,8 @@ void Graph::display_line(sf::RenderWindow& window, sf::Vector2f window_center, x
     c2.y *= perspective_multiplier(c2.z);
 
     sf::Vertex line[] = {
-        sf::Vertex( sf::Vector2f({c1.x, c1.y}) + window_center ),
-        sf::Vertex( sf::Vector2f({c2.x, c2.y}) + window_center )
+        sf::Vertex( window_center + sf::Vector2f({c1.x, -c1.y}) ),
+        sf::Vertex( window_center + sf::Vector2f({c2.x, -c2.y}) )
     };
     line[0].color = col1;
     line[1].color = col2;
@@ -379,12 +379,10 @@ float Graph::perspective_multiplier(float z) {
 
 void Graph::display_grid(sf::RenderWindow& window, float scale) {
 
-    sf::Color grid_color = sf::Color::Blue;
+    sf::Color grid_color = sf::Color(172, 172, 172);
     sf::Vector2f window_center = { 0.5f * window.getSize().x, 0.5f * window.getSize().y };
 
-    // small_corner -= {0.5f, 0.5f, 0.5f};
-    // big_corner += {0.5f, 0.5f, 0.5f};
-
+    // circumscribed parallelogram (is this even a word? circumscribed)
     std::map<int, xyz> corners;
 
     // big brain bool logic
@@ -405,13 +403,23 @@ void Graph::display_grid(sf::RenderWindow& window, float scale) {
     for ( int i = 4; i < 6; i ++ )
         display_line( window, window_center, corners[i], corners[i+2], grid_color, grid_color );
 
-    xyz center_window_coords = calc_window_coords( POV, scale );
-    display_point( window, window_center, center_window_coords, 4, grid_color );
+    // Window center & xyz trihedron
+    std::map<int, xyz> others;
+
+    others[0] = calc_window_coords( POV, scale );
+    float dir_len = 100 / scale;
+    others[1] = calc_window_coords( {POV.x + dir_len, POV.y, POV.z}, scale );
+    others[2] = calc_window_coords( {POV.x, POV.y + dir_len, POV.z}, scale );
+    others[3] = calc_window_coords( {POV.x, POV.y, POV.z + dir_len}, scale );
+
+    display_line( window, window_center, others[0], others[3], sf::Color::Blue, sf::Color::Blue );
+    display_line( window, window_center, others[0], others[2], sf::Color::Green, sf::Color::Green );
+    display_line( window, window_center, others[0], others[1], sf::Color::Red, sf::Color::Red );
 };
 
 void Node::update_coords() {
 
-    float vel_limit = 0.8f;
+    float vel_limit = 3;
 
     if ( len_squared(velocity) > vel_limit*vel_limit ) {
         float k = vel_limit / std::sqrt( len_squared(velocity) );
@@ -426,5 +434,5 @@ void Node::update_coords() {
         max_velocity = std::sqrt( len_squared(velocity) );
 
     coords += velocity;
-    velocity *= 0.7f;
+    velocity *= 0.75f;
 };

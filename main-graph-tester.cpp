@@ -8,14 +8,9 @@ int main() {
 
     Graph g;
 
-    g.emplace_node({1});
+    g.emplace_edge( g.emplace_node({1}), g.emplace_node({-1}) );
 
     int count = 1;
-    for ( unsigned int i=0; i<10; i++ ) {
-        g.emplace_edge( {count}, g.emplace_node({count+1}) );
-        g.emplace_edge( {2-count}, g.emplace_node({1-count}) );
-        count++;
-    }
 
     std::cout << "Preparing window..." << std::endl;
     
@@ -25,7 +20,7 @@ int main() {
     int frame = 0;
     const float delta_angle = 0.05;
     
-    sf::RenderWindow window(sf::VideoMode( 1600, 900 ), "SFML Window");
+    sf::RenderWindow window(sf::VideoMode( 1600, 900 ), "Graph");
     window.setFramerateLimit(FPS);
 
     sf::Font font;
@@ -41,6 +36,8 @@ int main() {
     clock.restart();
 
     std::cout << "Running window..." << std::endl;
+
+    std::cout << "  - Arrows to rotate;\n  - S to Shake;\n  - A to Add two nodes;\n  - Esc to quit." << std::endl;
 
     while (window.isOpen())
     {
@@ -61,10 +58,10 @@ int main() {
                     g.resetYawPitch();
                 if (event.key.code == sf::Keyboard::S)
                     for ( Node* tmp : g.getNodes() )
-                        tmp->set_coords(xyz_rnd_direction(5));
+                        tmp->set_coords(xyz_rnd_direction( g.getNodes().size() ));
                 if (event.key.code == sf::Keyboard::A) {
                     g.emplace_edge( {count}, g.emplace_node({count+1}) );
-                    g.emplace_edge( {2-count}, g.emplace_node({1-count}) );
+                    g.emplace_edge( {-count}, g.emplace_node({-count-1}) );
                     count++;
                 }
             }
@@ -75,9 +72,9 @@ int main() {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
             g.addYaw( - delta_angle );
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-            g.addPitch( delta_angle );
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
             g.addPitch( - delta_angle );
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+            g.addPitch( delta_angle );
 
         window.clear(sf::Color(3, 16, 25));
 
