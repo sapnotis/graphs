@@ -8,9 +8,34 @@ int main() {
 
     Graph g;
 
-    g.emplace_edge( g.emplace_node({1}), g.emplace_node({-1}) );
+    // int count = 1;
 
-    int count = 1;
+    // for ( int i = 1; i<=3; i++ )
+    //     for ( int j = 1; j<=3; j++ )
+    //         g.emplace_node( {i, j} );
+
+    // for ( int i = 1; i<=3; i++ )
+    //     for ( int j = 1; j<=3; j++ ) {
+    //         g.emplace_edge( {i, j}, {i+1, j} );
+    //         g.emplace_edge( {i, j+1}, {i, j} );       
+    //     }
+
+    // g.erase_node( g.findNode({2, 2}) ); ???
+
+    // g.rollcall();
+
+    for ( int i=1; i<=7; i++ )
+        for ( int j=1; j<=7; j++ )
+            for ( int k=1; k<=7; k++ )
+                g.emplace_node({i, j ,k});
+    
+    for ( int i=1; i<=7; i++ )
+        for ( int j=1; j<=7; j++ )
+            for ( int k=1; k<=7; k++ ) {
+                g.emplace_edge({i, j , k}, {i+1, j , k});
+                g.emplace_edge({i, j , k}, {i, j+1 , k});
+                g.emplace_edge({i, j , k}, {i, j , k+1});
+            }
 
     std::cout << "Preparing window..." << std::endl;
     
@@ -28,7 +53,7 @@ int main() {
         return -1;
     sf::Text text;
     text.setFont(font);
-    text.setCharacterSize(30);
+    text.setCharacterSize(20);
     text.setFillColor(sf::Color::White);
     text.setPosition(20.f, 20.f);
 
@@ -37,7 +62,9 @@ int main() {
 
     std::cout << "Running window..." << std::endl;
 
-    std::cout << "  - Arrows to rotate;\n  - S to Shake;\n  - A to Add two nodes;\n  - Esc to quit." << std::endl;
+    std::cout << "  - Arrows to rotate;\n  - S to Shake;\n  - Esc to quit." << std::endl;
+
+    float LagRatio;
 
     while (window.isOpen())
     {
@@ -59,11 +86,6 @@ int main() {
                 if (event.key.code == sf::Keyboard::S)
                     for ( Node* tmp : g.getNodes() )
                         tmp->set_coords(xyz_rnd_direction( g.getNodes().size() ));
-                if (event.key.code == sf::Keyboard::A) {
-                    g.emplace_edge( {count}, g.emplace_node({count+1}) );
-                    g.emplace_edge( {-count}, g.emplace_node({-count-1}) );
-                    count++;
-                }
             }
         }
 
@@ -82,10 +104,14 @@ int main() {
 
         if ( frame >= FPS ) {
             frame = 0;
-            float LagRatio = 0.001f * clock.restart().asMilliseconds();
-            text.setString( "Lag ratio:\n" + std::to_string( LagRatio )
-                + "\nNodes:\n" + std::to_string(2*count-1) );
+            LagRatio = 0.001f * clock.restart().asMilliseconds();
         }
+
+        text.setString( "Lag ratio: " + std::to_string( LagRatio )
+            + "\nNodes: " + std::to_string(g.getNodes().size())
+            + "\nvelocity_limit: " + std::to_string(Node::velocity_limit)
+            + "\ninteract_koef: " + std::to_string(Node::interact_koef)
+            + "\nvel_multiplier: " + std::to_string(Node::vel_multiplier) );
         
         window.draw(text);
 

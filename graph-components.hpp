@@ -37,9 +37,6 @@ public:
     void emplace_edge(Node* f, Node* s);
 
     void erase_node(Node* node);
-    void erase_node(const Node& node);
-
-    void erase_edge(std::vector<int> val_f, std::vector<int> val_s);
     void erase_edge(Node* f, Node* s);
 
     Node* findNode(std::vector<int> values);
@@ -75,7 +72,9 @@ private:
 public:
     bool checked;
 
-    inline static float max_velocity = 0; // debug
+    inline static float velocity_limit = 12;
+    inline static float interact_koef = 0.05f;
+    inline static float vel_multiplier = 0.6f;
     
     Node(std::vector<int> values);
     Node(std::vector<int> values, xyz coords);

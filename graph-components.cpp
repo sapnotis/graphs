@@ -72,16 +72,13 @@ void Graph::emplace_edge(Node* f, Node* s) {
 }
 
 void Graph::erase_node(Node* node) {
-    erase_node( *node );
-};
-
-void Graph::erase_node(const Node& node) {
+    Node ref = *node;
     unsigned int i = 0;
     unsigned int len = nodes.size();
 
     while ( i < len ) {
 
-        if ( nodes[i] == node ) {
+        if ( nodes[i] == ref ) {
             for ( Node* tmp : nodes[i].getEdges() )
                 tmp->forget_edge( &nodes[i] );
             nodes.erase(nodes.begin() + i);
@@ -92,12 +89,6 @@ void Graph::erase_node(const Node& node) {
     }
     
     std::cout << "(!) Graph couldn't erase node" << std::endl;
-};
-
-void Graph::erase_edge(std::vector<int> val_f, std::vector<int> val_s) {
-    Node* f = findNode(val_f);
-    Node* s = findNode(val_s);
-    erase_edge( f, s );
 };
 
 void Graph::erase_edge(Node* f, Node* s) {
@@ -149,7 +140,7 @@ void Graph::rollcall() {
 }
 
 Node::Node(std::vector<int> values)
-    : values(values), coords(xyz_rnd_direction(1.f)), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
+    : values(values), coords(xyz_rnd_direction(1)), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
 
 Node::Node(std::vector<int> values, xyz coords)
     : values(values), coords(coords), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
@@ -201,7 +192,7 @@ void Graph::update_nodes() {
 
 
         
-    float r = 0.1f;
+    float r = Node::interact_koef;
     float k = 0.25f * r;
     unsigned int number_of_nodes = nodes.size();
     
@@ -229,13 +220,8 @@ void Graph::update_nodes() {
         }
     // O(N^2) alarm end
 
-    // find maximum velocity of the tick
-    // Node::max_velocity = 0;
-
     for ( unsigned int i = 0; i < number_of_nodes; i++ )
         nodes[i].update_coords();
-    
-    // std::cout << Node::max_velocity << std::endl;
 };
 
 void Graph::display(sf::RenderWindow& window) {
@@ -419,10 +405,8 @@ void Graph::display_grid(sf::RenderWindow& window, float scale) {
 
 void Node::update_coords() {
 
-    float vel_limit = 3;
-
-    if ( len_squared(velocity) > vel_limit*vel_limit ) {
-        float k = vel_limit / std::sqrt( len_squared(velocity) );
+    if ( len_squared(velocity) > velocity_limit*velocity_limit ) {
+        float k = velocity_limit / std::sqrt( len_squared(velocity) );
         velocity.x *= k; velocity.y*= k; velocity.z*= k;
         color = sf::Color::Red;
     }
@@ -430,9 +414,6 @@ void Node::update_coords() {
         color = sf::Color::White;
     }
 
-    if ( max_velocity < std::sqrt( len_squared(velocity) ) )
-        max_velocity = std::sqrt( len_squared(velocity) );
-
     coords += velocity;
-    velocity *= 0.75f;
+    velocity *= vel_multiplier;
 };
