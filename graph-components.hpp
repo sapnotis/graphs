@@ -2,9 +2,8 @@
 #define _GRAPH_COMPONENTS_
 
 #include "tools.hpp"
-#include <deque>
 #include <vector>
-#include <map>
+#include <list>
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
@@ -17,7 +16,7 @@ class Graph
 private:
     const bool allow_equal_nodes; // meant to stay false (one node represents one state of values)
     const bool allow_multiple_edges; // meant to stay false (different moves of the same result are impossible)
-    std::deque<Node> nodes;
+    std::list<Node> nodes;
 
     xyz POV;
     float yaw;
@@ -36,7 +35,8 @@ public:
     void emplace_edge(std::vector<int> val_f, Node* s);
     void emplace_edge(Node* f, Node* s);
 
-    void erase_node(Node* node);
+    void erase_node(std::vector<int> values);
+    void erase_edge(std::vector<int> val_f, std::vector<int> val_s);
     void erase_edge(Node* f, Node* s);
 
     Node* findNode(std::vector<int> values);

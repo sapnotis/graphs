@@ -8,38 +8,43 @@ int main() {
 
     Graph g;
 
-    // int count = 1;
+    // g.emplace_node({1, 1});
+    // g.emplace_node({1, 2});
+    // g.emplace_node({2, 1});
+    // g.emplace_node({2, 2});
 
-    // for ( int i = 1; i<=3; i++ )
-    //     for ( int j = 1; j<=3; j++ )
-    //         g.emplace_node( {i, j} );
+    // g.emplace_edge( {1, 1}, {1, 2} );
+    // g.emplace_edge( {2, 1}, {2, 2} );
+    // g.emplace_edge( {1, 1}, {2, 1} );
+    // g.emplace_edge( {1, 2}, {2, 2} );
 
-    // for ( int i = 1; i<=3; i++ )
-    //     for ( int j = 1; j<=3; j++ ) {
-    //         g.emplace_edge( {i, j}, {i+1, j} );
-    //         g.emplace_edge( {i, j+1}, {i, j} );       
-    //     }
+    const int low = 3;
+    const int high = 10;
 
-    // g.erase_node( g.findNode({2, 2}) ); ???
-
-    // g.rollcall();
-
-    for ( int i=1; i<=7; i++ )
-        for ( int j=1; j<=7; j++ )
-            for ( int k=1; k<=7; k++ )
+    for ( int i=low; i<=high; i++ )
+        for ( int j=low; j<=high; j++ )
+            for ( int k=low; k<=high; k++ )
                 g.emplace_node({i, j ,k});
     
-    for ( int i=1; i<=7; i++ )
-        for ( int j=1; j<=7; j++ )
-            for ( int k=1; k<=7; k++ ) {
+    for ( int i=low; i<=high; i++ )
+        for ( int j=low; j<=high; j++ )
+            for ( int k=low; k<=high; k++ ) {
                 g.emplace_edge({i, j , k}, {i+1, j , k});
                 g.emplace_edge({i, j , k}, {i, j+1 , k});
                 g.emplace_edge({i, j , k}, {i, j , k+1});
             }
 
-    std::cout << "Preparing window..." << std::endl;
-    
+    for ( int i=5; i<=8; i++ )
+        for ( int j=5; j<=8; j++ )
+            for ( int k=low; k<=high; k++ )
+                g.erase_node({i, j , k});
+
+    g.rollcall();
+
+    // return 0;
     // WINDOW
+
+    std::cout << "Preparing window..." << std::endl;
 
     const int FPS = 50;
     int frame = 0;
@@ -63,8 +68,10 @@ int main() {
     std::cout << "Running window..." << std::endl;
 
     std::cout << "  - Arrows to rotate;\n  - S to Shake;\n  - Esc to quit." << std::endl;
-
-    float LagRatio;
+    for ( Node* tmp : g.getNodes() )
+        tmp->set_coords(xyz_rnd_direction( g.getNodes().size() ));
+    
+    float LagRatio = 1;
 
     while (window.isOpen())
     {

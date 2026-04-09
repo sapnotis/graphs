@@ -1,7 +1,8 @@
 #include "graph-components.hpp"
 
-#include <deque>
 #include <vector>
+#include <list>
+#include <algorithm>
 #include <map>
 #include <cmath>
 
@@ -16,7 +17,7 @@ Graph::~Graph() { };
 
 Node* Graph::emplace_node(std::vector<int> values) {
     if ( allow_equal_nodes ) {
-        nodes.emplace_back(values);
+        nodes.emplace_front(values);
         return &( nodes.back() );
     }
     
@@ -25,8 +26,7 @@ Node* Graph::emplace_node(std::vector<int> values) {
         return nullptr;
     }
     
-    nodes.emplace_back(values);
-    return &( nodes.back() );
+    return &( nodes.emplace_front(values) );
 }
 
 void Graph::emplace_edge(std::vector<int> val_f, std::vector<int> val_s) {
@@ -56,44 +56,40 @@ void Graph::emplace_edge(Node* f, Node* s) {
         return;
     }
 
-    if ( allow_multiple_edges ) {
-        f->add_edge( s );
-        s->add_edge( f );
-        return;
-    }
-
-    if ( f->find_edge(s) || s->find_edge(f) ) {
-        std::cout << "(!) Graph attempted to double edge" << std::endl;
-        return;
-    }
-
+    if ( ! allow_multiple_edges )
+        if ( f->find_edge(s) || s->find_edge(f) ) {
+            std::cout << "(!) Graph attempted to double edge" << std::endl;
+            return;
+        }
+    
     f->add_edge( s );
     s->add_edge( f );
 }
 
-void Graph::erase_node(Node* node) {
-    Node ref = *node;
-    unsigned int i = 0;
-    unsigned int len = nodes.size();
-
-    while ( i < len ) {
-
-        if ( nodes[i] == ref ) {
-            for ( Node* tmp : nodes[i].getEdges() )
-                tmp->forget_edge( &nodes[i] );
-            nodes.erase(nodes.begin() + i);
-            return;
-        }
-        else
-            i++;
+void Graph::erase_node(std::vector<int> values) {
+    Node ref(values);
+    
+    auto it = std::find(nodes.begin(), nodes.end(), ref);
+    if ( it == nodes.end() ) {
+        std::cout << "(!) Graph couldn't erase node" << std::endl;
+        return;
     }
     
-    std::cout << "(!) Graph couldn't erase node" << std::endl;
+    for ( Node* neighbour : it->getEdges() )
+        neighbour->forget_edge( &(*it) ); // it so cursed i'm so sorry
+    nodes.erase(it);
+};
+
+void Graph::erase_edge(std::vector<int> val_f, std::vector<int> val_s) {
+    Node* f = findNode(val_f);
+    Node* s = findNode(val_s);
+    erase_edge(f, s);
 };
 
 void Graph::erase_edge(Node* f, Node* s) {
     if ( ! f->find_edge( s ) || ! s->find_edge( f ) ) {
         std::cout << "(!) Graph couldn't erase edge" << std::endl;
+        return;
     }
 
     f->forget_edge( s );
@@ -101,23 +97,19 @@ void Graph::erase_edge(Node* f, Node* s) {
 };
 
 Node* Graph::findNode(std::vector<int> values) {
-    Node tmp_node(values);
-
-    unsigned int i = 0;
-    while ( i < nodes.size() ) {
-        if ( nodes[i] == tmp_node )
-            return &( nodes[i] );
-        else
-            i++;
-    }
-    return nullptr;
+    Node ref(values);
+    
+    auto it = std::find(nodes.begin(), nodes.end(), ref);
+    if ( it == nodes.end() )
+        return nullptr;
+    return ( &(*it) );
 }
 
 std::vector<Node*> Graph::getNodes() {
     std::vector<Node*> node_ptrs;
 
-    for ( unsigned int i = 0; i < nodes.size(); i++ )
-        node_ptrs.push_back( &nodes[i] );
+    for ( auto it = nodes.begin(); it != nodes.end(); it++ )
+        node_ptrs.push_back( &(*it) );
 
     return node_ptrs;
 };
@@ -125,14 +117,14 @@ std::vector<Node*> Graph::getNodes() {
 void Graph::rollcall() {
     std::cout << std::endl;
     std::cout << "=Nodes rollcall=" << std::endl;
-    for ( unsigned i=0; i < nodes.size(); i++ ) {
-        std::cout << & nodes[i];
+    for ( auto it = nodes.begin(); it != nodes.end(); it++ ) {
+        std::cout << &(*it);
         std::cout << "\t";
-        for ( unsigned int j=0; j < nodes[i].getValues().size(); j++ )
-            std::cout << " " << nodes[i].getValues()[j];
+        for ( int num : it->getValues() )
+            std::cout << " " << num;
         std::cout << "\t";
-        for ( unsigned int j=0; j < nodes[i].getEdges().size(); j++ )
-            std::cout << " " << nodes[i].getEdges()[j];
+        for ( Node* neighbour : it->getEdges() )
+            std::cout << " " << neighbour;
         std::cout << std::endl;
     }
     std::cout << "=Rollcall ended=" << std::endl;
@@ -140,7 +132,7 @@ void Graph::rollcall() {
 }
 
 Node::Node(std::vector<int> values)
-    : values(values), coords(xyz_rnd_direction(1)), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
+    : values(values), coords({0, 0, 0}), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
 
 Node::Node(std::vector<int> values, xyz coords)
     : values(values), coords(coords), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
@@ -152,29 +144,21 @@ void Node::add_edge(Node* node) {
 };
 
 bool Node::find_edge(Node* node) {
-    unsigned int i = 0;
-    while ( i < edges.size() ) {
-
-        if ( edges[i] == node )
-            return true;
-        else
-            i++;
-    }
-    return false;
+    
+    auto it = std::find(edges.begin(), edges.end(), node);
+    if ( it == edges.end() )
+        return false;
+    return true;
 };
 
 void Node::forget_edge(Node* node) {
-    unsigned int i = 0;
-    while ( i < edges.size() ) {
 
-        if ( edges[i] == node ) {
-            edges.erase(edges.begin() + i);
-            return;
-        }
-        else
-            i++;
+    auto it = std::find(edges.begin(), edges.end(), node);
+    if ( it == edges.end() ) {
+        std::cout << "(!) Node couldn't forget edge" << std::endl;
+        return;
     }
-    std::cout << "(!) Node couldn't forget edge" << std::endl;
+    edges.erase(it);
 };
 
 // V3 and SFML
@@ -182,46 +166,47 @@ void Node::forget_edge(Node* node) {
 void Graph::update_nodes() {
 
     xyz center_mass = {0, 0, 0};
-    for ( Node tmp : nodes )
-        center_mass += tmp.getCoords();
+    for ( Node node : nodes )
+        center_mass += node.getCoords();
     
     center_mass *= ( -1.f / nodes.size() );
     
-    for ( unsigned int i = 0; i < nodes.size(); i++ )
-        nodes[i].add_coords( center_mass );
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
+        node->add_coords( center_mass );
 
 
         
     float r = Node::interact_koef;
     float k = 0.25f * r;
-    unsigned int number_of_nodes = nodes.size();
     
     // O(N^2) alarm
     for ( auto first = nodes.begin(); first != nodes.end(); first++ )
-        for ( auto second = first+1; second != nodes.end(); second++ ) {
-            xyz delta_xyz = first->getCoords() - second->getCoords();
+        for ( auto second = std::next(first, 1); second != nodes.end(); second++ ) {
+            xyz delta_xyz = second->getCoords() - first->getCoords();            
             float delta_len_squared = len_squared(delta_xyz);
-            if ( delta_len_squared == 0 )
-                delta_len_squared = 1;
+
+            // not physically meaningfull, honestly
+            if ( delta_len_squared <= 0.1f )
+                delta_len_squared = 0.1f;
 
             xyz delta_velocity = delta_xyz * ( r / delta_len_squared );
-            first->add_velocity( delta_velocity );
-            second->add_velocity( delta_velocity * (-1) );
+            first->add_velocity( delta_velocity * (-1) );
+            second->add_velocity( delta_velocity );
         }
     
     for ( auto node = nodes.begin(); node != nodes.end(); node++ )
         for ( Node* neighbour : node->getEdges() ) {
             xyz delta_xyz = neighbour->getCoords() - node->getCoords();
             float delta_len_squared = len_squared(delta_xyz);
-
+            
             xyz delta_velocity = delta_xyz * ( -k * std::sqrt(delta_len_squared) );
-            neighbour->add_velocity( delta_velocity );
             node->add_velocity( delta_velocity * (-1) );
+            neighbour->add_velocity( delta_velocity );
         }
     // O(N^2) alarm end
 
-    for ( unsigned int i = 0; i < number_of_nodes; i++ )
-        nodes[i].update_coords();
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
+        node->update_coords();
 };
 
 void Graph::display(sf::RenderWindow& window) {
@@ -235,7 +220,6 @@ void Graph::display(sf::RenderWindow& window) {
     if ( pitch < -1.57f ) pitch = -1.57f;
     
     sf::Vector2f window_center = { 0.5f * window.getSize().x, 0.5f * window.getSize().y };
-    unsigned int number_of_nodes = nodes.size();
     
     small_corner = big_corner = {0, 0, 0};
 
@@ -257,6 +241,9 @@ void Graph::display(sf::RenderWindow& window) {
         if ( tmp_coords.z > big_corner.z )
             big_corner.z = tmp_coords.z;
     }
+
+    small_corner += {-1, -1, -1};
+    big_corner += {1, 1, 1};
 
     // POV value
     POV = {0, 0, 0};
@@ -290,19 +277,18 @@ void Graph::display(sf::RenderWindow& window) {
 
     std::map<Node*, xyz> nodes_window_coords;
 
-    for ( unsigned int i = 0; i < number_of_nodes; i++ )
-        nodes_window_coords[ &nodes[i] ] =
-            calc_window_coords( nodes[i].getCoords(), scale );
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
+        nodes_window_coords[ &(*node) ] =
+            calc_window_coords( node->getCoords(), scale );
 
-    for ( unsigned int i = 0; i < number_of_nodes; i++ ) {
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ ) {
 
-        display_point( window, window_center, nodes_window_coords[ &nodes[i] ], 4, nodes[i].getColor() );
+        display_point( window, window_center, nodes_window_coords[ &(*node) ], 4, node->getColor() );
 
-        std::vector<Node*> neighbours = nodes[i].getEdges();
-        for ( unsigned int j = 0; j < neighbours.size(); j++ )
-            display_line( window, window_center, nodes_window_coords[ &nodes[i] ], nodes_window_coords[ neighbours[j] ], nodes[i].getColor(), neighbours[j]->getColor() );
+        std::vector<Node*> neighbours = node->getEdges();
+        for ( Node* neighbour : neighbours )
+            display_line( window, window_center, nodes_window_coords[ &(*node) ], nodes_window_coords[ neighbour ], node->getColor(), neighbour->getColor() );
     }
-
 };
 
 void Graph::display_point(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords, float RadiusInPixels, sf::Color color) {
