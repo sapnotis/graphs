@@ -10,7 +10,7 @@
 #include <SFML/Graphics.hpp>
 
 Graph::Graph() : allow_equal_nodes(false), allow_multiple_edges(false),
-    POV({0, 0, 0}), yaw(0), pitch(0),
+    POV({0, 0, 0}), POV_multiplier(0.8f), selected_node(nullptr), yaw(0), pitch(0),
     small_corner({0, 0, 0}), big_corner({0, 0, 0}), closest_farthest_z({0, 0}) { };
 
 Graph::~Graph() { };
@@ -221,6 +221,8 @@ void Graph::display(sf::RenderWindow& window) {
     
     sf::Vector2f window_center = { 0.5f * window.getSize().x, 0.5f * window.getSize().y };
     
+    // outline box
+    
     small_corner = big_corner = {0, 0, 0};
 
     for ( Node tmp : nodes ) {
@@ -245,15 +247,21 @@ void Graph::display(sf::RenderWindow& window) {
     small_corner += {-1, -1, -1};
     big_corner += {1, 1, 1};
 
-    // POV value
-    POV = {0, 0, 0};
-    POV += (small_corner * 0.5f);
-    POV += (big_corner * 0.5f);
+    // POV
 
-    float maxwidth = big_corner.x - small_corner.x;
-    if ( big_corner.y - small_corner.y > maxwidth ) maxwidth = big_corner.y - small_corner.y;
-    if ( big_corner.z - small_corner.z > maxwidth ) maxwidth = big_corner.z - small_corner.z;
-    float scale = 1.8f * window_center.y / maxwidth;
+    xyz POV_goal = (small_corner + big_corner) * 0.5f;
+    if ( selected_node )
+        POV_goal = selected_node->getCoords();
+
+    POV = POV * POV_multiplier + POV_goal * ( 1 - POV_multiplier );
+
+    float scale = 100;
+    if ( ! selected_node ) {
+        float maxwidth = big_corner.x - small_corner.x;
+        if ( big_corner.y - small_corner.y > maxwidth ) maxwidth = big_corner.y - small_corner.y;
+        if ( big_corner.z - small_corner.z > maxwidth ) maxwidth = big_corner.z - small_corner.z;
+        scale = 1.75f * window_center.y / maxwidth;
+    }
 
     closest_farthest_z = {0, 0};
     for ( int i = 0; i < 8; i++ ) {

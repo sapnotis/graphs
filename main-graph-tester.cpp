@@ -2,12 +2,19 @@
 #include <string>
 #include "graph-components.hpp"
 #include <chrono>
+#include <cmath>
+
+void shake(Graph& g) {
+    for ( Node* tmp : g.getNodes() )
+        tmp->set_coords(rnd_xyz_direction( 20 * std::cbrt ( g.getNodes().size() ) ));
+}
 
 int main() {
     std::cout << "Preparing graph..." << std::endl;
 
     Graph g;
 
+    // square
     // g.emplace_node({1, 1});
     // g.emplace_node({1, 2});
     // g.emplace_node({2, 1});
@@ -18,6 +25,7 @@ int main() {
     // g.emplace_edge( {1, 1}, {2, 1} );
     // g.emplace_edge( {1, 2}, {2, 2} );
 
+    // big thing
     const int low = 3;
     const int high = 10;
 
@@ -39,7 +47,7 @@ int main() {
             for ( int k=low; k<=high; k++ )
                 g.erase_node({i, j , k});
 
-    g.rollcall();
+    std::cout << "Graph contains " << g.getNodes().size() << " nodes;" << std::endl;
 
     // return 0;
     // WINDOW
@@ -67,9 +75,9 @@ int main() {
 
     std::cout << "Running window..." << std::endl;
 
-    std::cout << "  - Arrows to rotate;\n  - S to Shake;\n  - Esc to quit." << std::endl;
-    for ( Node* tmp : g.getNodes() )
-        tmp->set_coords(xyz_rnd_direction( g.getNodes().size() ));
+    std::cout << "  - Arrows to rotate;\n  - S to Shake;\n  - R to Reset yaw/pitch;\n  - N to select random Node;\n  - Esc to quit." << std::endl;
+    
+    shake(g);
     
     float LagRatio = 1;
 
@@ -91,8 +99,13 @@ int main() {
                 if (event.key.code == sf::Keyboard::R)
                     g.resetYawPitch();
                 if (event.key.code == sf::Keyboard::S)
-                    for ( Node* tmp : g.getNodes() )
-                        tmp->set_coords(xyz_rnd_direction( g.getNodes().size() ));
+                    shake(g);
+                if (event.key.code == sf::Keyboard::N) {
+                    if ( g.get_selected_node() )
+                        g.set_selected_node(nullptr);
+                    else
+                        g.set_selected_node( g.getNodes()[rnd_number(0, g.getNodes().size())] );
+                }
             }
         }
 

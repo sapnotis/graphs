@@ -19,6 +19,9 @@ private:
     std::list<Node> nodes;
 
     xyz POV;
+    const float POV_multiplier;
+    Node* selected_node;
+
     float yaw;
     float pitch;
     xyz small_corner;
@@ -44,6 +47,9 @@ public:
     void rollcall();
 
     // V3 and SFML
+
+    Node* get_selected_node() { return selected_node; };
+    void set_selected_node(Node* selnode) { selected_node = selnode; };
 
     void update_nodes();
     
@@ -72,10 +78,13 @@ private:
 public:
     bool checked;
 
-    inline static float velocity_limit = 12;
-    inline static float interact_koef = 0.05f;
-    inline static float vel_multiplier = 0.6f;
+    inline const static float velocity_limit = 12;
+    inline const static float interact_koef = 0.05f;
+    inline const static float vel_multiplier = 0.6f;
     
+    // Consider replacing std::vector with std::array
+    // cause it's literally array of numbers
+    // no vector logic is needed
     Node(std::vector<int> values);
     Node(std::vector<int> values, xyz coords);
     ~Node();
@@ -87,18 +96,20 @@ public:
     void forget_edge(Node* node);
 
     std::vector<int> getValues() { return values; };
-    std::vector<Node*> getEdges() { return edges; };
-    xyz getCoords() const { return coords; };
-    xyz getVelocity() const { return velocity; };
-    sf::Color getColor() const { return color; }
+    std::vector<Node*> getEdges() { return edges; }; 
 
     // V3 and SFML
+    
+    void set_coords(xyz crd) { coords = crd; };
+    void add_coords(xyz dcrd) { coords += dcrd; };
+    xyz getCoords() const { return coords; };
 
     void set_velocity(xyz vel) { velocity = vel; };
-    void set_coords(xyz crd) { coords = crd; };
     void add_velocity(xyz dvel) { velocity += dvel; };
-    void add_coords(xyz dcrd) { coords += dcrd; };
+    xyz getVelocity() const { return velocity; };
+
     void set_color(sf::Color col) { color = col; };
+    sf::Color getColor() const { return color; }
 
     void update_coords();
 };

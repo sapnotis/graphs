@@ -2,11 +2,7 @@ CC = g++
 CFLAGS = -Wall -Wextra -Wpedantic -Werror
 SFMLFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
 
-all: main
-
-# выглядит костыльно, надо уточнить, как такое пишут нормальные люди
-o2main: main-graph-tester.o tools.o graph-components.o
-	$(CC) main-graph-tester.o tools.o graph-components.o -o main -O2 $(CFLAGS) $(SFMLFLAGS)
+all: clean main
 
 main: main-graph-tester.o tools.o graph-components.o
 	$(CC) main-graph-tester.o tools.o graph-components.o -o main $(CFLAGS) $(SFMLFLAGS)
