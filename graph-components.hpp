@@ -2,9 +2,8 @@
 #define _GRAPH_COMPONENTS_
 
 #include "tools.hpp"
-#include <deque>
 #include <vector>
-#include <map>
+#include <list>
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
@@ -17,13 +16,16 @@ class Graph
 private:
     const bool allow_equal_nodes; // meant to stay false (one node represents one state of values)
     const bool allow_multiple_edges; // meant to stay false (different moves of the same result are impossible)
-    std::deque<Node> nodes;
+    std::list<Node> nodes;
 
     xyz POV;
-    xyz small_corner;
-    xyz big_corner;
+    const float POV_multiplier;
+    Node* selected_node;
+
     float yaw;
     float pitch;
+    xyz small_corner;
+    xyz big_corner;
     sf::Vector2f closest_farthest_z;
 public:
     Graph();
@@ -36,9 +38,7 @@ public:
     void emplace_edge(std::vector<int> val_f, Node* s);
     void emplace_edge(Node* f, Node* s);
 
-    void erase_node(Node* node);
-    void erase_node(const Node& node);
-
+    void erase_node(std::vector<int> values);
     void erase_edge(std::vector<int> val_f, std::vector<int> val_s);
     void erase_edge(Node* f, Node* s);
 
@@ -47,6 +47,9 @@ public:
     void rollcall();
 
     // V3 and SFML
+
+    Node* get_selected_node() { return selected_node; };
+    void set_selected_node(Node* selnode) { selected_node = selnode; };
 
     void update_nodes();
     
@@ -75,8 +78,13 @@ private:
 public:
     bool checked;
 
-    inline static float max_velocity = 0; // debug
+    inline const static float velocity_limit = 12;
+    inline const static float interact_koef = 0.05f;
+    inline const static float vel_multiplier = 0.6f;
     
+    // Consider replacing std::vector with std::array
+    // cause it's literally array of numbers
+    // no vector logic is needed
     Node(std::vector<int> values);
     Node(std::vector<int> values, xyz coords);
     ~Node();
@@ -88,18 +96,20 @@ public:
     void forget_edge(Node* node);
 
     std::vector<int> getValues() { return values; };
-    std::vector<Node*> getEdges() { return edges; };
-    xyz getCoords() const { return coords; };
-    xyz getVelocity() const { return velocity; };
-    sf::Color getColor() const { return color; }
+    std::vector<Node*> getEdges() { return edges; }; 
 
     // V3 and SFML
+    
+    void set_coords(xyz crd) { coords = crd; };
+    void add_coords(xyz dcrd) { coords += dcrd; };
+    xyz getCoords() const { return coords; };
 
     void set_velocity(xyz vel) { velocity = vel; };
-    void set_coords(xyz crd) { coords = crd; };
     void add_velocity(xyz dvel) { velocity += dvel; };
-    void add_coords(xyz dcrd) { coords += dcrd; };
+    xyz getVelocity() const { return velocity; };
+
     void set_color(sf::Color col) { color = col; };
+    sf::Color getColor() const { return color; }
 
     void update_coords();
 };

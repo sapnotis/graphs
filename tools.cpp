@@ -10,7 +10,21 @@ void xyz::print() {
     std::cout << x << " " << y << " " << z << std::endl;
 }
 
-xyz xyz_rnd_direction(float amplitude) {
+unsigned int rnd_number(unsigned a, unsigned b) {
+    if (a > b) {
+        unsigned tmp = a;
+        a = b;
+        b = tmp;
+    }
+
+    std::random_device rd; 
+    std::mt19937 engine( rd() ); 
+    std::uniform_int_distribution<int> dist(a, b);
+
+    return dist(engine);
+};
+
+xyz rnd_xyz_direction(float amplitude) {
 
     if ( !amplitude )
         amplitude = 1;

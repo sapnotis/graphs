@@ -11,6 +11,10 @@ struct xyz
 
     void print();
 
+    xyz operator+(const xyz& other) const {
+        return {x + other.x, y + other.y, z + other.z};
+    };
+
     xyz operator-(const xyz& other) const {
         return {x - other.x, y - other.y, z - other.z};
     };
@@ -35,7 +39,9 @@ struct xyz
     };
 };
 
-xyz xyz_rnd_direction(float amplitude);
+unsigned int rnd_number(unsigned a, unsigned b);
+
+xyz rnd_xyz_direction(float amplitude);
 
 float len_squared(xyz delta);
 

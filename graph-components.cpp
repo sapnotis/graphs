@@ -1,7 +1,8 @@
 #include "graph-components.hpp"
 
-#include <deque>
 #include <vector>
+#include <list>
+#include <algorithm>
 #include <map>
 #include <cmath>
 
@@ -9,14 +10,14 @@
 #include <SFML/Graphics.hpp>
 
 Graph::Graph() : allow_equal_nodes(false), allow_multiple_edges(false),
-    POV({0, 0, 0}), small_corner({0, 0, 0}), big_corner({0, 0, 0}),
-    yaw(0), pitch(0), closest_farthest_z({0, 0}) { };
+    POV({0, 0, 0}), POV_multiplier(0.8f), selected_node(nullptr), yaw(0), pitch(0),
+    small_corner({0, 0, 0}), big_corner({0, 0, 0}), closest_farthest_z({0, 0}) { };
 
 Graph::~Graph() { };
 
 Node* Graph::emplace_node(std::vector<int> values) {
     if ( allow_equal_nodes ) {
-        nodes.emplace_back(values);
+        nodes.emplace_front(values);
         return &( nodes.back() );
     }
     
@@ -25,8 +26,7 @@ Node* Graph::emplace_node(std::vector<int> values) {
         return nullptr;
     }
     
-    nodes.emplace_back(values);
-    return &( nodes.back() );
+    return &( nodes.emplace_front(values) );
 }
 
 void Graph::emplace_edge(std::vector<int> val_f, std::vector<int> val_s) {
@@ -56,53 +56,40 @@ void Graph::emplace_edge(Node* f, Node* s) {
         return;
     }
 
-    if ( allow_multiple_edges ) {
-        f->add_edge( s );
-        s->add_edge( f );
-        return;
-    }
-
-    if ( f->find_edge(s) || s->find_edge(f) ) {
-        std::cout << "(!) Graph attempted to double edge" << std::endl;
-        return;
-    }
-
+    if ( ! allow_multiple_edges )
+        if ( f->find_edge(s) || s->find_edge(f) ) {
+            std::cout << "(!) Graph attempted to double edge" << std::endl;
+            return;
+        }
+    
     f->add_edge( s );
     s->add_edge( f );
 }
 
-void Graph::erase_node(Node* node) {
-    erase_node( *node );
-};
-
-void Graph::erase_node(const Node& node) {
-    unsigned int i = 0;
-    unsigned int len = nodes.size();
-
-    while ( i < len ) {
-
-        if ( nodes[i] == node ) {
-            for ( Node* tmp : nodes[i].getEdges() )
-                tmp->forget_edge( &nodes[i] );
-            nodes.erase(nodes.begin() + i);
-            return;
-        }
-        else
-            i++;
+void Graph::erase_node(std::vector<int> values) {
+    Node ref(values);
+    
+    auto it = std::find(nodes.begin(), nodes.end(), ref);
+    if ( it == nodes.end() ) {
+        std::cout << "(!) Graph couldn't erase node" << std::endl;
+        return;
     }
     
-    std::cout << "(!) Graph couldn't erase node" << std::endl;
+    for ( Node* neighbour : it->getEdges() )
+        neighbour->forget_edge( &(*it) ); // it so cursed i'm so sorry
+    nodes.erase(it);
 };
 
 void Graph::erase_edge(std::vector<int> val_f, std::vector<int> val_s) {
     Node* f = findNode(val_f);
     Node* s = findNode(val_s);
-    erase_edge( f, s );
+    erase_edge(f, s);
 };
 
 void Graph::erase_edge(Node* f, Node* s) {
     if ( ! f->find_edge( s ) || ! s->find_edge( f ) ) {
         std::cout << "(!) Graph couldn't erase edge" << std::endl;
+        return;
     }
 
     f->forget_edge( s );
@@ -110,23 +97,19 @@ void Graph::erase_edge(Node* f, Node* s) {
 };
 
 Node* Graph::findNode(std::vector<int> values) {
-    Node tmp_node(values);
-
-    unsigned int i = 0;
-    while ( i < nodes.size() ) {
-        if ( nodes[i] == tmp_node )
-            return &( nodes[i] );
-        else
-            i++;
-    }
-    return nullptr;
+    Node ref(values);
+    
+    auto it = std::find(nodes.begin(), nodes.end(), ref);
+    if ( it == nodes.end() )
+        return nullptr;
+    return ( &(*it) );
 }
 
 std::vector<Node*> Graph::getNodes() {
     std::vector<Node*> node_ptrs;
 
-    for ( unsigned int i = 0; i < nodes.size(); i++ )
-        node_ptrs.push_back( &nodes[i] );
+    for ( auto it = nodes.begin(); it != nodes.end(); it++ )
+        node_ptrs.push_back( &(*it) );
 
     return node_ptrs;
 };
@@ -134,14 +117,14 @@ std::vector<Node*> Graph::getNodes() {
 void Graph::rollcall() {
     std::cout << std::endl;
     std::cout << "=Nodes rollcall=" << std::endl;
-    for ( unsigned i=0; i < nodes.size(); i++ ) {
-        std::cout << & nodes[i];
+    for ( auto it = nodes.begin(); it != nodes.end(); it++ ) {
+        std::cout << &(*it);
         std::cout << "\t";
-        for ( unsigned int j=0; j < nodes[i].getValues().size(); j++ )
-            std::cout << " " << nodes[i].getValues()[j];
+        for ( int num : it->getValues() )
+            std::cout << " " << num;
         std::cout << "\t";
-        for ( unsigned int j=0; j < nodes[i].getEdges().size(); j++ )
-            std::cout << " " << nodes[i].getEdges()[j];
+        for ( Node* neighbour : it->getEdges() )
+            std::cout << " " << neighbour;
         std::cout << std::endl;
     }
     std::cout << "=Rollcall ended=" << std::endl;
@@ -149,7 +132,7 @@ void Graph::rollcall() {
 }
 
 Node::Node(std::vector<int> values)
-    : values(values), coords(xyz_rnd_direction(1.f)), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
+    : values(values), coords({0, 0, 0}), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
 
 Node::Node(std::vector<int> values, xyz coords)
     : values(values), coords(coords), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
@@ -161,29 +144,21 @@ void Node::add_edge(Node* node) {
 };
 
 bool Node::find_edge(Node* node) {
-    unsigned int i = 0;
-    while ( i < edges.size() ) {
-
-        if ( edges[i] == node )
-            return true;
-        else
-            i++;
-    }
-    return false;
+    
+    auto it = std::find(edges.begin(), edges.end(), node);
+    if ( it == edges.end() )
+        return false;
+    return true;
 };
 
 void Node::forget_edge(Node* node) {
-    unsigned int i = 0;
-    while ( i < edges.size() ) {
 
-        if ( edges[i] == node ) {
-            edges.erase(edges.begin() + i);
-            return;
-        }
-        else
-            i++;
+    auto it = std::find(edges.begin(), edges.end(), node);
+    if ( it == edges.end() ) {
+        std::cout << "(!) Node couldn't forget edge" << std::endl;
+        return;
     }
-    std::cout << "(!) Node couldn't forget edge" << std::endl;
+    edges.erase(it);
 };
 
 // V3 and SFML
@@ -191,51 +166,47 @@ void Node::forget_edge(Node* node) {
 void Graph::update_nodes() {
 
     xyz center_mass = {0, 0, 0};
-    for ( Node tmp : nodes )
-        center_mass += tmp.getCoords();
+    for ( Node node : nodes )
+        center_mass += node.getCoords();
     
     center_mass *= ( -1.f / nodes.size() );
     
-    for ( unsigned int i = 0; i < nodes.size(); i++ )
-        nodes[i].add_coords( center_mass );
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
+        node->add_coords( center_mass );
 
 
         
-    float r = 0.1f;
-    float k = 0.5f * r;
-    unsigned int number_of_nodes = nodes.size();
+    float r = Node::interact_koef;
+    float k = 0.25f * r;
     
     // O(N^2) alarm
     for ( auto first = nodes.begin(); first != nodes.end(); first++ )
-        for ( auto second = first+1; second != nodes.end(); second++ ) {
-            xyz delta_xyz = first->getCoords() - second->getCoords();
+        for ( auto second = std::next(first, 1); second != nodes.end(); second++ ) {
+            xyz delta_xyz = second->getCoords() - first->getCoords();            
             float delta_len_squared = len_squared(delta_xyz);
-            if ( delta_len_squared == 0 )
-                delta_len_squared = 1;
+
+            // not physically meaningfull, honestly
+            if ( delta_len_squared <= 0.1f )
+                delta_len_squared = 0.1f;
 
             xyz delta_velocity = delta_xyz * ( r / delta_len_squared );
-            first->add_velocity( delta_velocity );
-            second->add_velocity( delta_velocity * (-1) );
+            first->add_velocity( delta_velocity * (-1) );
+            second->add_velocity( delta_velocity );
         }
     
     for ( auto node = nodes.begin(); node != nodes.end(); node++ )
         for ( Node* neighbour : node->getEdges() ) {
             xyz delta_xyz = neighbour->getCoords() - node->getCoords();
             float delta_len_squared = len_squared(delta_xyz);
-
+            
             xyz delta_velocity = delta_xyz * ( -k * std::sqrt(delta_len_squared) );
-            neighbour->add_velocity( delta_velocity );
             node->add_velocity( delta_velocity * (-1) );
+            neighbour->add_velocity( delta_velocity );
         }
     // O(N^2) alarm end
 
-    // find maximum velocity of the tick
-    // Node::max_velocity = 0;
-
-    for ( unsigned int i = 0; i < number_of_nodes; i++ )
-        nodes[i].update_coords();
-    
-    // std::cout << Node::max_velocity << std::endl;
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
+        node->update_coords();
 };
 
 void Graph::display(sf::RenderWindow& window) {
@@ -249,7 +220,8 @@ void Graph::display(sf::RenderWindow& window) {
     if ( pitch < -1.57f ) pitch = -1.57f;
     
     sf::Vector2f window_center = { 0.5f * window.getSize().x, 0.5f * window.getSize().y };
-    unsigned int number_of_nodes = nodes.size();
+    
+    // outline box
     
     small_corner = big_corner = {0, 0, 0};
 
@@ -272,15 +244,24 @@ void Graph::display(sf::RenderWindow& window) {
             big_corner.z = tmp_coords.z;
     }
 
-    // POV value
-    POV = {0, 0, 0};
-    POV += (small_corner * 0.5f);
-    POV += (big_corner * 0.5f);
+    small_corner += {-1, -1, -1};
+    big_corner += {1, 1, 1};
 
-    float maxwidth = big_corner.x - small_corner.x;
-    if ( big_corner.y - small_corner.y > maxwidth ) maxwidth = big_corner.y - small_corner.y;
-    if ( big_corner.z - small_corner.z > maxwidth ) maxwidth = big_corner.z - small_corner.z;
-    float scale = 1.5f * window_center.y / maxwidth;
+    // POV
+
+    xyz POV_goal = (small_corner + big_corner) * 0.5f;
+    if ( selected_node )
+        POV_goal = selected_node->getCoords();
+
+    POV = POV * POV_multiplier + POV_goal * ( 1 - POV_multiplier );
+
+    float scale = 100;
+    if ( ! selected_node ) {
+        float maxwidth = big_corner.x - small_corner.x;
+        if ( big_corner.y - small_corner.y > maxwidth ) maxwidth = big_corner.y - small_corner.y;
+        if ( big_corner.z - small_corner.z > maxwidth ) maxwidth = big_corner.z - small_corner.z;
+        scale = 1.75f * window_center.y / maxwidth;
+    }
 
     closest_farthest_z = {0, 0};
     for ( int i = 0; i < 8; i++ ) {
@@ -304,19 +285,18 @@ void Graph::display(sf::RenderWindow& window) {
 
     std::map<Node*, xyz> nodes_window_coords;
 
-    for ( unsigned int i = 0; i < number_of_nodes; i++ )
-        nodes_window_coords[ &nodes[i] ] =
-            calc_window_coords( nodes[i].getCoords(), scale );
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
+        nodes_window_coords[ &(*node) ] =
+            calc_window_coords( node->getCoords(), scale );
 
-    for ( unsigned int i = 0; i < number_of_nodes; i++ ) {
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ ) {
 
-        display_point( window, window_center, nodes_window_coords[ &nodes[i] ], 4, nodes[i].getColor() );
+        display_point( window, window_center, nodes_window_coords[ &(*node) ], 4, node->getColor() );
 
-        std::vector<Node*> neighbours = nodes[i].getEdges();
-        for ( unsigned int j = 0; j < neighbours.size(); j++ )
-            display_line( window, window_center, nodes_window_coords[ &nodes[i] ], nodes_window_coords[ neighbours[j] ], nodes[i].getColor(), neighbours[j]->getColor() );
+        std::vector<Node*> neighbours = node->getEdges();
+        for ( Node* neighbour : neighbours )
+            display_line( window, window_center, nodes_window_coords[ &(*node) ], nodes_window_coords[ neighbour ], node->getColor(), neighbour->getColor() );
     }
-
 };
 
 void Graph::display_point(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords, float RadiusInPixels, sf::Color color) {
@@ -328,7 +308,7 @@ void Graph::display_point(sf::RenderWindow& window, sf::Vector2f window_center, 
     sf::CircleShape circle(RadiusInPixels);
     circle.setOrigin(RadiusInPixels, RadiusInPixels);
     circle.setFillColor(color);
-    circle.setPosition( sf::Vector2f({coords.x, coords.y}) + window_center );
+    circle.setPosition( window_center + sf::Vector2f({coords.x, -coords.y}) );
     window.draw(circle);
 };
 
@@ -341,8 +321,8 @@ void Graph::display_line(sf::RenderWindow& window, sf::Vector2f window_center, x
     c2.y *= perspective_multiplier(c2.z);
 
     sf::Vertex line[] = {
-        sf::Vertex( sf::Vector2f({c1.x, c1.y}) + window_center ),
-        sf::Vertex( sf::Vector2f({c2.x, c2.y}) + window_center )
+        sf::Vertex( window_center + sf::Vector2f({c1.x, -c1.y}) ),
+        sf::Vertex( window_center + sf::Vector2f({c2.x, -c2.y}) )
     };
     line[0].color = col1;
     line[1].color = col2;
@@ -379,12 +359,10 @@ float Graph::perspective_multiplier(float z) {
 
 void Graph::display_grid(sf::RenderWindow& window, float scale) {
 
-    sf::Color grid_color = sf::Color::Blue;
+    sf::Color grid_color = sf::Color(172, 172, 172);
     sf::Vector2f window_center = { 0.5f * window.getSize().x, 0.5f * window.getSize().y };
 
-    // small_corner -= {0.5f, 0.5f, 0.5f};
-    // big_corner += {0.5f, 0.5f, 0.5f};
-
+    // circumscribed parallelogram (is this even a word? circumscribed)
     std::map<int, xyz> corners;
 
     // big brain bool logic
@@ -405,16 +383,24 @@ void Graph::display_grid(sf::RenderWindow& window, float scale) {
     for ( int i = 4; i < 6; i ++ )
         display_line( window, window_center, corners[i], corners[i+2], grid_color, grid_color );
 
-    xyz center_window_coords = calc_window_coords( POV, scale );
-    display_point( window, window_center, center_window_coords, 4, grid_color );
+    // Window center & xyz trihedron
+    std::map<int, xyz> others;
+
+    others[0] = calc_window_coords( POV, scale );
+    float dir_len = 100 / scale;
+    others[1] = calc_window_coords( {POV.x + dir_len, POV.y, POV.z}, scale );
+    others[2] = calc_window_coords( {POV.x, POV.y + dir_len, POV.z}, scale );
+    others[3] = calc_window_coords( {POV.x, POV.y, POV.z + dir_len}, scale );
+
+    display_line( window, window_center, others[0], others[3], sf::Color::Blue, sf::Color::Blue );
+    display_line( window, window_center, others[0], others[2], sf::Color::Green, sf::Color::Green );
+    display_line( window, window_center, others[0], others[1], sf::Color::Red, sf::Color::Red );
 };
 
 void Node::update_coords() {
 
-    float vel_limit = 0.8f;
-
-    if ( len_squared(velocity) > vel_limit*vel_limit ) {
-        float k = vel_limit / std::sqrt( len_squared(velocity) );
+    if ( len_squared(velocity) > velocity_limit*velocity_limit ) {
+        float k = velocity_limit / std::sqrt( len_squared(velocity) );
         velocity.x *= k; velocity.y*= k; velocity.z*= k;
         color = sf::Color::Red;
     }
@@ -422,9 +408,6 @@ void Node::update_coords() {
         color = sf::Color::White;
     }
 
-    if ( max_velocity < std::sqrt( len_squared(velocity) ) )
-        max_velocity = std::sqrt( len_squared(velocity) );
-
     coords += velocity;
-    velocity *= 0.7f;
+    velocity *= vel_multiplier;
 };
