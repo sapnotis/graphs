@@ -58,6 +58,6 @@ float len_squared(xyz delta) {
 
 sf::Color color_of_depth(float depth_0to1) {
     sf::Color color;
-    color.r = color.g = color.b = 240 - 225 * depth_0to1;
+    color.r = color.g = color.b = 240 - 180 * depth_0to1;
     return color;
 };

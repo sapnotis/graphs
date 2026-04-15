@@ -27,26 +27,23 @@ int main() {
     // g.emplace_edge( {1, 1}, {2, 1} );
     // g.emplace_edge( {1, 2}, {2, 2} );
 
-    // big thing
-    const int low = 3;
-    const int high = 10;
-
-    for ( int i=low; i<=high; i++ )
-        for ( int j=low; j<=high; j++ )
-            for ( int k=low; k<=high; k++ )
+    // thing
+    for ( int i=1; i<=7; i++ )
+        for ( int j=1; j<=7; j++ )
+            for ( int k=1; k<=7; k++ )
                 g.emplace_node({i, j ,k});
     
-    for ( int i=low; i<=high; i++ )
-        for ( int j=low; j<=high; j++ )
-            for ( int k=low; k<=high; k++ ) {
+    for ( int i=1; i<=7; i++ )
+        for ( int j=1; j<=7; j++ )
+            for ( int k=1; k<=7; k++ ) {
                 g.emplace_edge({i, j , k}, {i+1, j , k});
                 g.emplace_edge({i, j , k}, {i, j+1 , k});
                 g.emplace_edge({i, j , k}, {i, j , k+1});
             }
 
-    for ( int i=5; i<=8; i++ )
-        for ( int j=5; j<=8; j++ )
-            for ( int k=low; k<=high; k++ )
+    for ( int i=5; i<=7; i++ )
+        for ( int j=5; j<=7; j++ )
+            for ( int k=5; k<=7; k++ )
                 g.erase_node({i, j , k});
 
     std::cout << "Graph contains " << g.getNodes().size() << " nodes;" << std::endl;
@@ -118,13 +115,14 @@ int main() {
                                 (g.get_selected_neighbour() + 1) % g.get_selected_node()->getEdges().size()
                             );
                 if (event.key.code == sf::Keyboard::Enter) {
-                    g.set_selected_node(
-                        g.get_selected_node()->getEdges()[g.get_selected_neighbour()]
-                    );
-                    if ( g.get_selected_node()->getEdges().size() )
-                        g.set_selected_neighbour( 0 );
-                    else
-                        g.set_selected_neighbour( -1 );
+                    if ( g.get_selected_node() && g.get_selected_neighbour() != -1 ) {
+
+                        g.set_selected_node( g.get_selected_node()->getEdges()[g.get_selected_neighbour()] );
+                        if ( g.get_selected_node()->getEdges().size() )
+                            g.set_selected_neighbour( 0 );
+                        else
+                            g.set_selected_neighbour( -1 );
+                    }
                 }
             }
         }
@@ -146,22 +144,26 @@ int main() {
             LagRatio = 0.005f * clock.restart().asMilliseconds();
         }
 
-        debug_text.setString( "Lag ratio: " + std::to_string( LagRatio )
+        debug_text.setString( "FPS limit: " + std::to_string(FPS)
+            + "\nLag ratio: " + std::to_string( LagRatio )
             + "\nNodes: " + std::to_string(g.getNodes().size())
             + "\nvelocity_limit: " + std::to_string(Node::velocity_limit)
             + "\ninteract_koef: " + std::to_string(Node::interact_koef)
             + "\nvel_multiplier: " + std::to_string(Node::vel_multiplier) );
 
-        node_text.setPosition(window.getSize().x + 20, window.getSize().y + 20);
+        node_text.setPosition(window.getSize().x / 2 + 10, window.getSize().y / 2 + 10);
         std::stringstream ss;
-        ss << g.get_selected_node();
+        if ( g.get_selected_node() )
+            for ( int i : g.get_selected_node()->getValues() )
+                ss << i << " ";
+        else
+            ss << 0;
         node_text.setString( ss.str() );
 
         window.draw(debug_text);
         window.draw(node_text);
 
-        g.update_nodes();
-        g.sort_by_distance();
+        g.tick();
         g.display(window);
         
         window.display();

@@ -27,7 +27,6 @@ private:
     float pitch;
     xyz small_corner;
     xyz big_corner;
-    sf::Vector2f closest_farthest_z;
 public:
     Graph();
     ~Graph();
@@ -54,7 +53,7 @@ public:
     int get_selected_neighbour() { return selected_neighbour; };
     void set_selected_neighbour(int sel_tar) { selected_neighbour = sel_tar; };
 
-    void update_nodes();
+    void tick();
     
     void display(sf::RenderWindow& window);
 
@@ -67,9 +66,8 @@ public:
 
     xyz calc_window_coords(xyz coords, float scale);
     float perspective_multiplier(float z);
-    void display_grid(sf::RenderWindow& window, float scale, sf::Color grid_color);
-
-    void sort_by_distance();
+    void display_grid(sf::RenderWindow& window, sf::Color grid_color);
+    void display_xyz_axes(sf::RenderWindow& window, float scale);
 };
 
 class Node
