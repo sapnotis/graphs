@@ -45,6 +45,6 @@ xyz rnd_xyz_direction(float amplitude);
 
 float len_squared(xyz delta);
 
-// sf::Color color_of_depth(float depth);
+sf::Color color_of_depth(float depth_0to1);
 
 #endif

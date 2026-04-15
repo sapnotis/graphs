@@ -3,6 +3,8 @@
 #include "graph-components.hpp"
 #include <chrono>
 #include <cmath>
+#include <sstream>
+#include <string>
 
 void shake(Graph& g) {
     for ( Node* tmp : g.getNodes() )
@@ -54,7 +56,7 @@ int main() {
 
     std::cout << "Preparing window..." << std::endl;
 
-    const int FPS = 50;
+    const int FPS = 60;
     int frame = 0;
     const float delta_angle = 0.05;
     
@@ -64,19 +66,23 @@ int main() {
     sf::Font font;
     if ( !font.loadFromFile("arialmt.ttf") )
         return -1;
-    sf::Text text;
-    text.setFont(font);
-    text.setCharacterSize(20);
-    text.setFillColor(sf::Color::White);
-    text.setPosition(20.f, 20.f);
+
+    sf::Text debug_text;
+    debug_text.setFont(font);
+    debug_text.setCharacterSize(20);
+    debug_text.setFillColor(sf::Color::White);
+    debug_text.setPosition(20.f, 20.f);
+
+    sf::Text node_text;
+    node_text.setFont(font);
+    node_text.setCharacterSize(14);
+    node_text.setFillColor(sf::Color::White);
 
     sf::Clock clock;
     clock.restart();
 
     std::cout << "Running window..." << std::endl;
-
-    std::cout << "  - Arrows to rotate;\n  - S to Shake;\n  - R to Reset yaw/pitch;\n  - N to select random Node;\n  - Esc to quit." << std::endl;
-    
+ 
     shake(g);
     
     float LagRatio = 1;
@@ -101,10 +107,24 @@ int main() {
                 if (event.key.code == sf::Keyboard::S)
                     shake(g);
                 if (event.key.code == sf::Keyboard::N) {
+                    g.set_selected_neighbour(-1);
+                    if ( g.get_selected_node() ) g.set_selected_node(nullptr);
+                    else g.set_selected_node( g.getNodes()[rnd_number(0, g.getNodes().size()-1)] );
+                }
+                if (event.key.code == sf::Keyboard::Tab)
                     if ( g.get_selected_node() )
-                        g.set_selected_node(nullptr);
+                        if ( g.get_selected_node()->getEdges().size() )
+                            g.set_selected_neighbour(
+                                (g.get_selected_neighbour() + 1) % g.get_selected_node()->getEdges().size()
+                            );
+                if (event.key.code == sf::Keyboard::Enter) {
+                    g.set_selected_node(
+                        g.get_selected_node()->getEdges()[g.get_selected_neighbour()]
+                    );
+                    if ( g.get_selected_node()->getEdges().size() )
+                        g.set_selected_neighbour( 0 );
                     else
-                        g.set_selected_node( g.getNodes()[rnd_number(0, g.getNodes().size())] );
+                        g.set_selected_neighbour( -1 );
                 }
             }
         }
@@ -121,21 +141,27 @@ int main() {
         window.clear(sf::Color(3, 16, 25));
 
         frame++;
-
-        if ( frame >= FPS ) {
+        if ( frame >= FPS/5 ) {
             frame = 0;
-            LagRatio = 0.001f * clock.restart().asMilliseconds();
+            LagRatio = 0.005f * clock.restart().asMilliseconds();
         }
 
-        text.setString( "Lag ratio: " + std::to_string( LagRatio )
+        debug_text.setString( "Lag ratio: " + std::to_string( LagRatio )
             + "\nNodes: " + std::to_string(g.getNodes().size())
             + "\nvelocity_limit: " + std::to_string(Node::velocity_limit)
             + "\ninteract_koef: " + std::to_string(Node::interact_koef)
             + "\nvel_multiplier: " + std::to_string(Node::vel_multiplier) );
-        
-        window.draw(text);
+
+        node_text.setPosition(window.getSize().x + 20, window.getSize().y + 20);
+        std::stringstream ss;
+        ss << g.get_selected_node();
+        node_text.setString( ss.str() );
+
+        window.draw(debug_text);
+        window.draw(node_text);
 
         g.update_nodes();
+        g.sort_by_distance();
         g.display(window);
         
         window.display();

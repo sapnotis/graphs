@@ -10,8 +10,8 @@
 #include <SFML/Graphics.hpp>
 
 Graph::Graph() : allow_equal_nodes(false), allow_multiple_edges(false),
-    POV({0, 0, 0}), POV_multiplier(0.8f), selected_node(nullptr), yaw(0), pitch(0),
-    small_corner({0, 0, 0}), big_corner({0, 0, 0}), closest_farthest_z({0, 0}) { };
+    POV({0, 0, 0}), POV_multiplier(0.7f), selected_node(nullptr), selected_neighbour(-1),
+    yaw(0), pitch(0), small_corner({0, 0, 0}), big_corner({0, 0, 0}), closest_farthest_z({0, 0}) { };
 
 Graph::~Graph() { };
 
@@ -211,6 +211,10 @@ void Graph::update_nodes() {
 
 void Graph::display(sf::RenderWindow& window) {
 
+    sf::Color grid_color = sf::Color(64, 64, 172);
+    // sf::Color selection_color = sf::Color(255, 200, 50);
+    sf::Color selection_color = sf::Color(255, 100, 0);
+
     // numbers describing to the graph as a whole
     
     if ( yaw > 6.28f ) yaw -= 6.28f;
@@ -277,7 +281,8 @@ void Graph::display(sf::RenderWindow& window) {
             closest_farthest_z.y = corner_window_coords.z;
     }
 
-    display_grid( window, scale );
+    if ( ! selected_node )
+        display_grid( window, scale, grid_color );
 
 
 
@@ -285,17 +290,34 @@ void Graph::display(sf::RenderWindow& window) {
 
     std::map<Node*, xyz> nodes_window_coords;
 
-    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
-        nodes_window_coords[ &(*node) ] =
-            calc_window_coords( node->getCoords(), scale );
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ ) {
+        xyz node_window_coords = calc_window_coords( node->getCoords(), scale );
+        nodes_window_coords[ &(*node) ] = node_window_coords;
+        if ( node->getColor() != sf::Color::Red ) {
+            sf::Color node_color = color_of_depth( (closest_farthest_z.x - node_window_coords.z) / ( closest_farthest_z.x - closest_farthest_z.y ) );
+            if ( selected_node )
+                node_color.a = 55;
+            node->set_color( node_color );
+        }
+    }
 
     for ( auto node = nodes.begin(); node != nodes.end(); node++ ) {
 
-        display_point( window, window_center, nodes_window_coords[ &(*node) ], 4, node->getColor() );
+        if ( closest_farthest_z.x - nodes_window_coords[ &(*node) ].z > 0 )
+            display_point( window, window_center, nodes_window_coords[ &(*node) ], 4, node->getColor() );
+        // else
+            // std::cout << "Hid node " << &(*node) << std::endl;
 
         std::vector<Node*> neighbours = node->getEdges();
         for ( Node* neighbour : neighbours )
             display_line( window, window_center, nodes_window_coords[ &(*node) ], nodes_window_coords[ neighbour ], node->getColor(), neighbour->getColor() );
+    }
+
+    if ( selected_node ) {
+        display_point( window, window_center, nodes_window_coords[ selected_node ], 4, selection_color );
+        if ( selected_neighbour != -1 ) {
+            display_line( window, window_center, nodes_window_coords[ selected_node ], nodes_window_coords[ selected_node->getEdges()[selected_neighbour] ], selection_color, selection_color );
+        }
     }
 };
 
@@ -354,12 +376,12 @@ xyz Graph::calc_window_coords(xyz coords, float scale) {
 
 float Graph::perspective_multiplier(float z) {
     float k = 2000.f;
+    // return ( k / ( 500.f + k - z ) );
     return ( k / ( closest_farthest_z.x + k - z ) );
 };
 
-void Graph::display_grid(sf::RenderWindow& window, float scale) {
+void Graph::display_grid(sf::RenderWindow& window, float scale, sf::Color grid_color) {
 
-    sf::Color grid_color = sf::Color(172, 172, 172);
     sf::Vector2f window_center = { 0.5f * window.getSize().x, 0.5f * window.getSize().y };
 
     // circumscribed parallelogram (is this even a word? circumscribed)
@@ -397,16 +419,24 @@ void Graph::display_grid(sf::RenderWindow& window, float scale) {
     display_line( window, window_center, others[0], others[1], sf::Color::Red, sf::Color::Red );
 };
 
+void Graph::sort_by_distance() {
+    std::map<Node*, xyz> nodes_window_coords;
+
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
+        nodes_window_coords[ &(*node) ] = calc_window_coords( node->getCoords(), 1 );
+
+    nodes.sort( [nodes_window_coords](Node& a, Node& b) { return nodes_window_coords.at(&a).z < nodes_window_coords.at(&b).z; } );
+}
+
 void Node::update_coords() {
 
     if ( len_squared(velocity) > velocity_limit*velocity_limit ) {
         float k = velocity_limit / std::sqrt( len_squared(velocity) );
         velocity.x *= k; velocity.y*= k; velocity.z*= k;
-        color = sf::Color::Red;
+        color = sf::Color(255, 0, 0);
     }
-    else {
+    else
         color = sf::Color::White;
-    }
 
     coords += velocity;
     velocity *= vel_multiplier;
