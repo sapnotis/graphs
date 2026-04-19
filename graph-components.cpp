@@ -226,19 +226,34 @@ void Graph::display(sf::RenderWindow& window) {
 
 
 
+    float maxdist_sqr = 0;
+    for ( Node node : nodes ) {
+        float len_sqr = len_squared( node.getCoords() );
+        if ( maxdist_sqr < len_sqr )
+            maxdist_sqr = len_sqr;
+        }
+    float maxdist = std::sqrt(maxdist_sqr);
+
+    float scale = 30;
+    if ( ! selected_node ) {
+        if ( window_center.y < window_center.x )
+            scale = 0.9f * window_center.y / maxdist;
+        else
+            scale = 0.9f * window_center.x / maxdist;
+    }
+
+
+
     std::map<Node*, xyz> nodes_window_coords;
 
     for ( auto node = nodes.begin(); node != nodes.end(); node++ )
-        nodes_window_coords[ &(*node) ] = calc_window_coords( node->getCoords(), 1 );
+        nodes_window_coords[ &(*node) ] = calc_window_coords( node->getCoords(), scale );
     
     nodes.sort( [nodes_window_coords](Node& a, Node& b) {
         return nodes_window_coords.at(&a).z < nodes_window_coords.at(&b).z;
     } );
 
     small_corner = big_corner = {0, 0, 0};
-
-    small_corner.z = nodes_window_coords[ &(nodes.back()) ].z;
-    big_corner.z = nodes_window_coords[ &(nodes.front()) ].z;
 
     for ( auto& [n, coords] : nodes_window_coords ) {
         if ( coords.x > big_corner.x )
@@ -251,40 +266,23 @@ void Graph::display(sf::RenderWindow& window) {
             small_corner.y = coords.y;
     }
 
-    float scale = 30;
-    if ( ! selected_node ) {
-        float maxdist_sqr = 0;
-        for ( Node node : nodes ) {
-            float len_sqr = len_squared( node.getCoords() );
-            if ( maxdist_sqr < len_sqr )
-                maxdist_sqr = len_sqr;
-            }
-
-        if ( window_center.y < window_center.x )
-            scale = window_center.y / std::sqrt(maxdist_sqr);
-        else
-            scale = window_center.x / std::sqrt(maxdist_sqr);
-    }
-
-    for ( auto& [n, coords] : nodes_window_coords )
-        coords *= scale;
-    small_corner *= scale;
-    big_corner *= scale;
-
-    // display
-
-    display_xyz_axes(window, scale);
+    small_corner.z = nodes_window_coords[ &(nodes.front()) ].z;
+    big_corner.z = nodes_window_coords[ &(nodes.back()) ].z;
 
     for ( auto node = nodes.begin(); node != nodes.end(); node++ ) {
         sf::Color color = depth_shading(
-            (small_corner.z - nodes_window_coords.at( &(*node) ).z)
-            / (small_corner.z - big_corner.z),
+            ( big_corner.z - nodes_window_coords.at( &(*node) ).z ) / ( 2*maxdist*scale ),
             node->getColor()
         );
         if ( selected_node )
             color.a = 55;
         node->set_color( color );
     }
+
+    // display
+
+    display_xyz_axes(window, scale);
+    display_grid(window, sf::Color::Magenta);
 
     for ( auto node = nodes.begin(); node != nodes.end(); node++ ) {
 
