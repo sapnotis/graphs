@@ -4,6 +4,9 @@ SFMLFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
 
 all: clean main
 
+optimized: main-graph-tester.o tools.o graph-components.o
+	$(CC) main-graph-tester.o tools.o graph-components.o -o main -O2 $(CFLAGS) $(SFMLFLAGS)
+
 main: main-graph-tester.o tools.o graph-components.o
 	$(CC) main-graph-tester.o tools.o graph-components.o -o main $(CFLAGS) $(SFMLFLAGS)
 

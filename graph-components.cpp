@@ -208,7 +208,6 @@ void Graph::tick() {
 
 void Graph::display(sf::RenderWindow& window) {
 
-    // sf::Color grid_color = sf::Color(64, 64, 172);
     sf::Color selection_color = sf::Color(255, 165, 0);
     
     if ( yaw > 6.28f ) yaw -= 6.28f;
@@ -276,16 +275,16 @@ void Graph::display(sf::RenderWindow& window) {
 
     display_xyz_axes(window, scale);
 
-    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
-        if ( node->getColor() != sf::Color::Red ) {
-            sf::Color color = color_of_depth(
-                (small_corner.z - nodes_window_coords.at( &(*node) ).z)
-                / (small_corner.z - big_corner.z)
-            );
-            if ( selected_node )
-                color.a = 55;
-            node->set_color( color );
-        }
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ ) {
+        sf::Color color = depth_shading(
+            (small_corner.z - nodes_window_coords.at( &(*node) ).z)
+            / (small_corner.z - big_corner.z),
+            node->getColor()
+        );
+        if ( selected_node )
+            color.a = 55;
+        node->set_color( color );
+    }
 
     for ( auto node = nodes.begin(); node != nodes.end(); node++ ) {
 
@@ -307,7 +306,6 @@ void Graph::display(sf::RenderWindow& window) {
 
 void Graph::display_point(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords, float RadiusInPixels, sf::Color color) {
     
-    // perspective
     coords.x *= perspective_multiplier(coords.z);
     coords.y *= perspective_multiplier(coords.z);
 
@@ -320,7 +318,6 @@ void Graph::display_point(sf::RenderWindow& window, sf::Vector2f window_center, 
 
 void Graph::display_line(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2, sf::Color col1, sf::Color col2) {
 
-    // perspective
     c1.x *= perspective_multiplier(c1.z);
     c1.y *= perspective_multiplier(c1.z);
     c2.x *= perspective_multiplier(c2.z);
@@ -359,9 +356,8 @@ xyz Graph::calc_window_coords(xyz coords, float scale) {
 };
 
 float Graph::perspective_multiplier(float z) {
-    float k = 2500.f;
+    float k = 1200.f;
     return ( k / ( k - z ) );
-    // return 1;
 };
 
 void Graph::display_grid(sf::RenderWindow& window, sf::Color grid_color) {

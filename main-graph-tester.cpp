@@ -27,24 +27,24 @@ int main() {
     // g.emplace_edge( {1, 1}, {2, 1} );
     // g.emplace_edge( {1, 2}, {2, 2} );
 
-    // thing
-    for ( int i=1; i<=7; i++ )
-        for ( int j=1; j<=7; j++ )
-            for ( int k=1; k<=7; k++ )
-                g.emplace_node({i, j ,k});
+    // beating thing
+    for ( int i=1; i<=10; i++ )
+    for ( int j=1; j<=10; j++ )
+    for ( int k=1; k<=10; k++ )
+        g.emplace_node({i, j ,k});
     
-    for ( int i=1; i<=7; i++ )
-        for ( int j=1; j<=7; j++ )
-            for ( int k=1; k<=7; k++ ) {
-                g.emplace_edge({i, j , k}, {i+1, j , k});
-                g.emplace_edge({i, j , k}, {i, j+1 , k});
-                g.emplace_edge({i, j , k}, {i, j , k+1});
-            }
+    for ( int i=1; i<=10; i++ )
+    for ( int j=1; j<=10; j++ )
+    for ( int k=1; k<=10; k++ ) {
+        g.emplace_edge({i, j , k}, {i+1, j , k});
+        g.emplace_edge({i, j , k}, {i, j+1 , k});
+        g.emplace_edge({i, j , k}, {i, j , k+1});
+    }
 
-    for ( int i=5; i<=7; i++ )
-        for ( int j=5; j<=7; j++ )
-            for ( int k=5; k<=7; k++ )
-                g.erase_node({i, j , k});
+    for ( int i=3; i<=5; i++ )
+    for ( int j=3; j<=5; j++ )
+    for ( int k=1; k<=10; k++ )
+        g.erase_node({i, j , k});
 
     std::cout << "Graph contains " << g.getNodes().size() << " nodes;" << std::endl;
 
