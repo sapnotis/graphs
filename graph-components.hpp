@@ -21,12 +21,12 @@ private:
     xyz POV;
     const float POV_multiplier;
     Node* selected_node;
+    int selected_neighbour;
 
     float yaw;
     float pitch;
     xyz small_corner;
     xyz big_corner;
-    sf::Vector2f closest_farthest_z;
 public:
     Graph();
     ~Graph();
@@ -49,9 +49,11 @@ public:
     // V3 and SFML
 
     Node* get_selected_node() { return selected_node; };
-    void set_selected_node(Node* selnode) { selected_node = selnode; };
+    void set_selected_node(Node* sel_node) { selected_node = sel_node; };
+    int get_selected_neighbour() { return selected_neighbour; };
+    void set_selected_neighbour(int sel_tar) { selected_neighbour = sel_tar; };
 
-    void update_nodes();
+    void tick();
     
     void display(sf::RenderWindow& window);
 
@@ -64,7 +66,8 @@ public:
 
     xyz calc_window_coords(xyz coords, float scale);
     float perspective_multiplier(float z);
-    void display_grid(sf::RenderWindow& window, float scale);
+    void display_grid(sf::RenderWindow& window, sf::Color grid_color);
+    void display_xyz_axes(sf::RenderWindow& window, float scale);
 };
 
 class Node
