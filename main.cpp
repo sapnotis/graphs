@@ -1,56 +1,40 @@
 #include <iostream>
-#include <string>
 #include "graph-components.hpp"
+#include "combinator.hpp"
+// #include "board.hpp or something"
+
 #include <chrono>
 #include <cmath>
 #include <sstream>
 #include <string>
 
-void shake(Graph& g) {
-    for ( Node* tmp : g.getNodes() )
-        tmp->set_coords(rnd_xyz_direction( 20 * std::cbrt ( g.getNodes().size() ) ));
-}
-
 int main() {
+
+    // ============================== ДОСКА ==============================
+    
+    std::cout << "Preparing board..." << std::endl;
+
+    // const int width = 3; // ширина
+    // const int height = 3; // высота
+    // const int N = 4; // кол-во блоков
+    // int[N][2] blocks = { {1, 1}, {1, 1}, {1, 1}, {2, 2} }; // размеры блоков
+
+    // Board board(width, height, N, blocks); // инициализация доски
+
+    // ============================== ГРАФ ==============================
+
     std::cout << "Preparing graph..." << std::endl;
 
-    Graph g;
+    Graph graph;
+    // graph.emplace_node( {...} ); // стартовая вершина
+    // board_to_graph(board, graph); // построение графа
 
-    // torus
-    for ( int i=0; i<=20; i++ )
-    for ( int j=0; j<=10; j++ )
-        g.emplace_node({i, j});
+    test_graph_torus(graph); // тестовый граф, не отражающий доску, заместо board_to_graph
+
+    std::cout << "Graph contains " << graph.getNodes().size() << " nodes;" << std::endl;
+
+    // ============================== ОКНО ==============================
     
-    for ( int i=0; i<=20; i++ )
-    for ( int j=0; j<=10; j++ ) {
-        g.emplace_edge({i, j}, {(i+1)%21, j});
-        g.emplace_edge({i, j}, {i, (j+1)%11});
-    }
-
-    // beating thing
-    // for ( int i=1; i<=10; i++ )
-    // for ( int j=1; j<=10; j++ )
-    // for ( int k=1; k<=10; k++ )
-    //     g.emplace_node({i, j ,k});
-    
-    // for ( int i=1; i<=10; i++ )
-    // for ( int j=1; j<=10; j++ )
-    // for ( int k=1; k<=10; k++ ) {
-    //     g.emplace_edge({i, j , k}, {i+1, j , k});
-    //     g.emplace_edge({i, j , k}, {i, j+1 , k});
-    //     g.emplace_edge({i, j , k}, {i, j , k+1});
-    // }
-
-    // for ( int i=3; i<=5; i++ )
-    // for ( int j=3; j<=5; j++ )
-    // for ( int k=1; k<=10; k++ )
-    //     g.erase_node({i, j , k});
-
-    std::cout << "Graph contains " << g.getNodes().size() << " nodes;" << std::endl;
-
-    // return 0;
-    // WINDOW
-
     std::cout << "Preparing window..." << std::endl;
 
     const int FPS = 60;
@@ -80,7 +64,8 @@ int main() {
 
     std::cout << "Running window..." << std::endl;
  
-    shake(g);
+    for ( Node* tmp : graph.getNodes() )
+        tmp->set_coords(rnd_xyz_direction( 20 * std::cbrt ( graph.getNodes().size() ) ));
     
     float LagRatio = 1;
 
@@ -100,41 +85,42 @@ int main() {
                 if (event.key.code == sf::Keyboard::Escape)
                     window.close();
                 if (event.key.code == sf::Keyboard::R)
-                    g.resetYawPitch();
+                    graph.resetYawPitch();
                 if (event.key.code == sf::Keyboard::S)
-                    shake(g);
+                    for ( Node* tmp : graph.getNodes() )
+                        tmp->set_coords(rnd_xyz_direction( 20 * std::cbrt ( graph.getNodes().size() ) ));
                 if (event.key.code == sf::Keyboard::N) {
-                    g.set_selected_neighbour(-1);
-                    if ( g.get_selected_node() ) g.set_selected_node(nullptr);
-                    else g.set_selected_node( g.getNodes()[rnd_number(0, g.getNodes().size()-1)] );
+                    graph.set_selected_neighbour(-1);
+                    if ( graph.get_selected_node() ) graph.set_selected_node(nullptr);
+                    else graph.set_selected_node( graph.getNodes()[rnd_number(0, graph.getNodes().size()-1)] );
                 }
                 if (event.key.code == sf::Keyboard::Tab)
-                    if ( g.get_selected_node() )
-                        if ( g.get_selected_node()->getEdges().size() )
-                            g.set_selected_neighbour(
-                                (g.get_selected_neighbour() + 1) % g.get_selected_node()->getEdges().size()
+                    if ( graph.get_selected_node() )
+                        if ( graph.get_selected_node()->getEdges().size() )
+                            graph.set_selected_neighbour(
+                                (graph.get_selected_neighbour() + 1) % graph.get_selected_node()->getEdges().size()
                             );
                 if (event.key.code == sf::Keyboard::Enter) {
-                    if ( g.get_selected_node() && g.get_selected_neighbour() != -1 ) {
+                    if ( graph.get_selected_node() && graph.get_selected_neighbour() != -1 ) {
 
-                        g.set_selected_node( g.get_selected_node()->getEdges()[g.get_selected_neighbour()] );
-                        if ( g.get_selected_node()->getEdges().size() )
-                            g.set_selected_neighbour( 0 );
+                        graph.set_selected_node( graph.get_selected_node()->getEdges()[graph.get_selected_neighbour()] );
+                        if ( graph.get_selected_node()->getEdges().size() )
+                            graph.set_selected_neighbour( 0 );
                         else
-                            g.set_selected_neighbour( -1 );
+                            graph.set_selected_neighbour( -1 );
                     }
                 }
             }
         }
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-            g.addYaw( delta_angle );
+            graph.addYaw( delta_angle );
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-            g.addYaw( - delta_angle );
+            graph.addYaw( - delta_angle );
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-            g.addPitch( - delta_angle );
+            graph.addPitch( - delta_angle );
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-            g.addPitch( delta_angle );
+            graph.addPitch( delta_angle );
 
         window.clear(sf::Color(3, 16, 25));
 
@@ -146,15 +132,15 @@ int main() {
 
         debug_text.setString( "FPS limit: " + std::to_string(FPS)
             + "\nLag ratio: " + std::to_string( LagRatio )
-            + "\nNodes: " + std::to_string(g.getNodes().size())
+            + "\nNodes: " + std::to_string(graph.getNodes().size())
             + "\nvelocity_limit: " + std::to_string(Node::velocity_limit)
             + "\ninteract_koef: " + std::to_string(Node::interact_koef)
             + "\nvel_multiplier: " + std::to_string(Node::vel_multiplier) );
 
         node_text.setPosition(window.getSize().x / 2 + 10, window.getSize().y / 2 + 10);
         std::stringstream ss;
-        if ( g.get_selected_node() )
-            for ( int i : g.get_selected_node()->getValues() )
+        if ( graph.get_selected_node() )
+            for ( int i : graph.get_selected_node()->getValues() )
                 ss << i << " ";
         else
             ss << 0;
@@ -163,8 +149,8 @@ int main() {
         window.draw(debug_text);
         window.draw(node_text);
 
-        g.tick();
-        g.display(window);
+        graph.tick();
+        graph.display(window);
         
         window.display();
     }
