@@ -1,9 +1,10 @@
-class Board {
+﻿/*class Board {
 
 private:
     int w;
     int h;
     int n;
+
 
 public:
     Board(int w, int h, int n) : w(w), h(h), n(n) {}
@@ -38,5 +39,58 @@ public:
         }
         return true;
     }
+*/
 
-}
+//---------------------------------actual version!!!-----------------------------------------
+
+#include <vector>
+#include <iostream>
+using namespace std;
+
+struct Piece {
+    int x, y, w, h;
+};
+
+class Board {
+private:
+    int w, h;
+    vector<Piece> pieces;
+
+public:
+    Board(int w, int h, vector<Piece> pieces) : w(w), h(h), pieces(pieces) {}
+
+    bool isValid() {
+        for (int i = 0; i < pieces.size(); i++) {
+            auto& p = pieces[i];
+
+            //granitsi
+            if (p.x < 0 or p.y < 0 or p.x + p.w > w or p.y + p.h > h)
+                return false;
+
+            //nalozheniya
+            for (int j = 0; j < i; j++) {
+                auto& q = pieces[j];
+                if (p.x < q.x + q.w and p.x + p.w > q.x and
+                    p.y < q.y + q.h and p.y + p.h > q.y)
+                    return false;
+            }
+        }
+        return true;
+    }
+};
+
+
+/*int main() {
+    vector<Piece> p = {{0, 0, 2, 2}, {1, 1, 2, 2}};
+
+    Board board(4, 5, p);
+
+    if (board.isValid()) {
+        cout << "Board is valid!" << endl;
+    }
+    else {
+        cout << "Board is invalid!" << endl;
+    }
+
+    return 0;
+}*/
