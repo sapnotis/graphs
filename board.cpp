@@ -59,9 +59,9 @@ private:
 public:
     Board(int w, int h, vector<Piece> pieces) : w(w), h(h), pieces(pieces) {}
 
-    bool isValid() {
-        for (int i = 0; i < pieces.size(); i++) {
-            auto& p = pieces[i];
+    bool isValid(vector<Piece> given_pieces) {
+        for (int i = 0; i < given_pieces.size(); i++) {
+            auto& p = given_pieces[i];
 
             //granitsi
             if (p.x < 0 or p.y < 0 or p.x + p.w > w or p.y + p.h > h)
@@ -69,7 +69,7 @@ public:
 
             //nalozheniya
             for (int j = 0; j < i; j++) {
-                auto& q = pieces[j];
+                auto& q = given_pieces[j];
                 if (p.x < q.x + q.w and p.x + p.w > q.x and
                     p.y < q.y + q.h and p.y + p.h > q.y)
                     return false;
@@ -82,10 +82,12 @@ public:
 
 /*int main() {
     vector<Piece> p = {{0, 0, 2, 2}, {1, 1, 2, 2}};
+    vector<Piece> b = {{0, 0, 2, 2}, {0, 2, 1, 2}, {3, 2, 1, 2}, {0, 4, 2, 1}, {2, 4, 2, 1}, {2, 0, 1, 1}, {3, 0, 1, 1}, {2, 1, 1, 1}, {3, 1, 1, 1}};
+
 
     Board board(4, 5, p);
 
-    if (board.isValid()) {
+    if (board.isValid(b)) {
         cout << "Board is valid!" << endl;
     }
     else {
