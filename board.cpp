@@ -1,51 +1,40 @@
-﻿
-//----------------------------------------------------newest version-----------------------------------------------------
+﻿#include <board.hpp>
 
-#include <vector>
 #include <iostream>
-using namespace std;
+using std::cin, std::cout, std::endl;
+#include <vector>
+using std::vector;
 
-struct Piece {
-    int x, y, w, h;
-};
+bool Board::isValid(vector<int>& coords) {
 
-class Board {
-private:
-    int w, h;
-    vector<Piece> pieces;  // block's sizes for the board
+    // safety check
+    if ( coords.size() != 2*pieces.size() ) {
+        cout << "(!) incorrect vector size at IsValid" << endl;
+        return false;
+    }
 
-public:
-    Board(int w, int h, vector<Piece> pieces) : w(w), h(h), pieces(pieces) {}
+    for (int i = 0; i < pieces.size(); i++) {
+        int x = coords[2 * i];
+        int y = coords[2 * i + 1];
 
-    bool isValid(vector<int>& coords) {
-        // safety check
-        if (coords.size() != pieces.size() * 2)
+        // limits
+        if (x < 0 or y < 0 or (x + pieces[i].w > w) or (y + pieces[i].h > h))
             return false;
 
-        for (int i = 0; i < pieces.size(); i++) {
-            int x = coords[2 * i];
-            int y = coords[2 * i + 1];
+        // nalozheniya
+        for (int j = 0; j < i; j++) {
+            int x2 = coords[2 * j];
+            int y2 = coords[2 * j + 1];
 
-            // limits
-            if (x < 0 or y < 0 or (x + pieces[i].w > w) or (y + pieces[i].h > h))
+            if (x < x2 + pieces[j].w and x + pieces[i].w > x2 and y < y2 + pieces[j].h and y + pieces[i].h > y2)
                 return false;
-
-            // nalozheniya
-            for (int j = 0; j < i; j++) {
-                int x2 = coords[2 * j];
-                int y2 = coords[2 * j + 1];
-
-                if (x < x2 + pieces[j].w and x + pieces[i].w > x2 and y < y2 + pieces[j].h and y + pieces[i].h > y2)
-                    return false;
-            }
         }
-        return true;
     }
-};
 
+    return true;
+}
 
-
-
+/*
 int main() {
     vector<Piece> pieces = { {0, 0, 2, 2}, {0, 0, 1, 2}, {0, 0, 1, 2}, {0, 0, 2, 1}, {0, 0, 2, 1}, {0, 0, 1, 1}, {0, 0, 1, 1}, {0, 0, 1, 1}, {0, 0, 1, 1} };
 
@@ -62,3 +51,4 @@ int main() {
 
     return 0;
 }
+*/
