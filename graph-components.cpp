@@ -208,6 +208,9 @@ void Graph::tick() {
 
 void Graph::display(sf::RenderWindow& window) {
 
+    if ( ! nodes.size() )
+        return;
+
     sf::Color selection_color = sf::Color(255, 165, 0);
     
     if ( yaw > 6.28f ) yaw -= 6.28f;
@@ -226,7 +229,7 @@ void Graph::display(sf::RenderWindow& window) {
 
 
 
-    float maxdist_sqr = 0;
+    float maxdist_sqr = 1;
     for ( Node node : nodes ) {
         float len_sqr = len_squared( node.getCoords() );
         if ( maxdist_sqr < len_sqr )
@@ -282,7 +285,7 @@ void Graph::display(sf::RenderWindow& window) {
     // display
 
     display_xyz_axes(window, scale);
-    display_grid(window, sf::Color::Magenta);
+    // display_grid(window, sf::Color::Magenta);
 
     for ( auto node = nodes.begin(); node != nodes.end(); node++ ) {
 

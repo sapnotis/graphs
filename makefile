@@ -1,25 +1,19 @@
-CC = g++
-CFLAGS = -Wall -Wextra -Wpedantic -Werror
+C = g++
+# CFLAGS = -Wall -Wextra -Wpedantic -Werror
 SFMLFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
 
 all: clean main
 
-main: main.o tools.o graph-components.o combinator.o
-	$(CC) main.o tools.o graph-components.o combinator.o -o main $(OPT) $(CFLAGS) $(SFMLFLAGS)
+main: main.o combinator.o board.o graph-components.o tools.o
+	$(C) main.o board.o combinator.o graph-components.o tools.o -o main $(OPT) $(CFLAGS) $(SFMLFLAGS)
 
-main.o:
-	$(CC) -c main.cpp -o main.o $(OPT) $(CFLAGS) $(SFMLFLAGS)
-
-tools.o:
-	$(CC) -c tools.cpp -o tools.o $(OPT) $(CFLAGS) $(SFMLFLAGS)
-
-graph-components.o:
-	$(CC) -c graph-components.cpp -o graph-components.o $(OPT) $(CFLAGS) $(SFMLFLAGS)
-
-combinator.o:
-	$(CC) -c combinator.cpp -o combinator.o $(OPT) $(CFLAGS) $(SFMLFLAGS)
+%.o: %.cpp
+	$(C) -c $< -o $@ $(OPT) $(CFLAGS) $(SFMLFLAGS) $(CFLAGS)
 
 clean:
 	rm -f *.o main
 
-.PHONY: all clean
+run:
+	./main
+
+.PHONY: all clean run

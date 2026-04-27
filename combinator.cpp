@@ -1,9 +1,9 @@
 #include "combinator.hpp"
 
-// void board_to_graph(Board& board, Graph& graph)
-// {
-//     построение графа graph состояний доски board
-// };
+void board_to_graph(Board& board, Graph& graph)
+{
+    // построение графа graph состояний доски board
+};
 
 void test_graph_torus(Graph& graph)
 {

@@ -1,11 +1,11 @@
-﻿#include <board.hpp>
+﻿#include "board.hpp"
 
 #include <iostream>
 using std::cin, std::cout, std::endl;
 #include <vector>
 using std::vector;
 
-bool Board::isValid(vector<int>& coords) {
+bool Board::isValid(vector<int> coords) {
 
     // safety check
     if ( coords.size() != 2*pieces.size() ) {

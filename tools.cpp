@@ -58,8 +58,8 @@ float len_squared(xyz delta) {
 
 sf::Color depth_shading(float depth_0to1, const sf::Color& color) {
     sf::Color shaded_color = color;
-    shaded_color.r *= 1 - 0.75*depth_0to1;
-    shaded_color.g *= 1 - 0.75*depth_0to1;
-    shaded_color.b *= 1 - 0.75*depth_0to1;
+    shaded_color.r *= 1 - 0.9*depth_0to1;
+    shaded_color.g *= 1 - 0.9*depth_0to1;
+    shaded_color.b *= 1 - 0.9*depth_0to1;
     return shaded_color;
 };

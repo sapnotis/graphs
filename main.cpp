@@ -1,7 +1,8 @@
 #include <iostream>
+using std::cout, std::endl;
 #include "graph-components.hpp"
 #include "combinator.hpp"
-// #include "board.hpp or something"
+#include "board.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -12,30 +13,37 @@ int main() {
 
     // ============================== ДОСКА ==============================
     
-    std::cout << "Preparing board..." << std::endl;
+    cout << "Preparing board..." << endl;
 
-    // const int width = 3; // ширина
-    // const int height = 3; // высота
-    // const int N = 4; // кол-во блоков
-    // int[N][2] blocks = { {1, 1}, {1, 1}, {1, 1}, {2, 2} }; // размеры блоков
+    const int width = 4; // ширина
+    const int height = 5; // высота
+    
+    vector<Piece> pieces = {
+        {0, 0, 1, 1}, {0, 1, 1, 1}, {1, 0, 2, 2}, {3, 0, 1, 1}, {3, 1, 1, 1},
+        {0, 2, 1, 2}, {1, 2, 1, 1}, {1, 3, 1, 1}, {2, 2, 1, 1}, {2, 3, 1, 1}, {3, 2, 1, 2},
+        {0, 4, 1, 1}, {3, 4, 1, 1}
+    }; // блоки
 
-    // Board board(width, height, N, blocks); // инициализация доски
+    Board board(width, height, pieces); // инициализация доски
 
     // ============================== ГРАФ ==============================
 
-    std::cout << "Preparing graph..." << std::endl;
+    cout << "Preparing graph..." << endl;
 
     Graph graph;
-    // graph.emplace_node( {...} ); // стартовая вершина
-    // board_to_graph(board, graph); // построение графа
+    graph.emplace_node(
+        {0, 0, 0, 1, 1, 0, 3, 0, 3, 1,
+        0, 2, 1, 2, 1, 3, 2, 2, 2, 3, 3, 2,
+        0, 4, 3, 4}
+    ); // стартовая вершина
 
-    test_graph_torus(graph); // тестовый граф, не отражающий доску, заместо board_to_graph
+    board_to_graph(board, graph); // построение графа
 
-    std::cout << "Graph contains " << graph.getNodes().size() << " nodes;" << std::endl;
+    cout << "Graph contains " << graph.getNodes().size() << " nodes;" << endl;
 
     // ============================== ОКНО ==============================
     
-    std::cout << "Preparing window..." << std::endl;
+    cout << "Preparing window..." << endl;
 
     const int FPS = 60;
     int frame = 0;
@@ -62,7 +70,10 @@ int main() {
     sf::Clock clock;
     clock.restart();
 
-    std::cout << "Running window..." << std::endl;
+    cout << "Running window..." << endl;
+
+    cout << "\nUse buttons:\n\tEsc to exit.\n\tR to Reset Yaw/Pitch.\n\tS to Shake.\n\tM to change Mode..." << endl;
+    cout << "In \"Node travelling\" mode use Tab to select next node and Enter to go there." << endl;
  
     for ( Node* tmp : graph.getNodes() )
         tmp->set_coords(rnd_xyz_direction( 20 * std::cbrt ( graph.getNodes().size() ) ));
@@ -89,7 +100,7 @@ int main() {
                 if (event.key.code == sf::Keyboard::S)
                     for ( Node* tmp : graph.getNodes() )
                         tmp->set_coords(rnd_xyz_direction( 20 * std::cbrt ( graph.getNodes().size() ) ));
-                if (event.key.code == sf::Keyboard::N) {
+                if (event.key.code == sf::Keyboard::M) {
                     graph.set_selected_neighbour(-1);
                     if ( graph.get_selected_node() ) graph.set_selected_node(nullptr);
                     else graph.set_selected_node( graph.getNodes()[rnd_number(0, graph.getNodes().size()-1)] );
@@ -130,7 +141,9 @@ int main() {
             LagRatio = 0.005f * clock.restart().asMilliseconds();
         }
 
-        debug_text.setString( "FPS limit: " + std::to_string(FPS)
+        debug_text.setString(
+            "Inputs:\nEsc, R(eset), S(hake), M(ode).\nTab & Enter for travelling.\n\nDebug:\nFPS limit: "
+            + std::to_string(FPS)
             + "\nLag ratio: " + std::to_string( LagRatio )
             + "\nNodes: " + std::to_string(graph.getNodes().size())
             + "\nvelocity_limit: " + std::to_string(Node::velocity_limit)

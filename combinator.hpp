@@ -2,9 +2,9 @@
 #define _COMBINATOR_
 
 #include "graph-components.hpp"
-// #include "board.hpp or something"
+#include "board.hpp"
 
-// void board_to_graph(Board& board, Graph& graph);
+void board_to_graph(Board& board, Graph& graph);
 
 void test_graph_torus(Graph& graph);
 void test_graph_beating_thing(Graph& graph);

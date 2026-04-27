@@ -1,5 +1,8 @@
-#ifndef _BOARD_
-#define _BOARD_
+#ifndef _BOARD_LOGIC_
+#define _BOARD_LOGIC_
+
+#include <vector>
+using std::vector;
 
 struct Piece {
     int x, y, w, h;
@@ -12,7 +15,7 @@ private:
 
 public:
     Board(int w, int h, vector<Piece> pieces) : w(w), h(h), pieces(pieces) { };
-    bool isValid(vector<int>& coords);
+    bool isValid(vector<int> coords);
 };
 
 #endif
