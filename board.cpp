@@ -1,47 +1,5 @@
-﻿/*class Board {
-
-private:
-    int w;
-    int h;
-    int n;
-
-
-public:
-    Board(int w, int h, int n) : w(w), h(h), n(n) {}
-
-    ~Board() {}
-
-    bool isPositionValid(int* coords) {
-        int sizes[][2] = { {2,2},{1,2},{1,2},{2,1},{2,1},{1,1},{1,1},{1,1},{1,1} };
-
-        for (int i = 0; i < n; i++) {
-            int x = coords[2 * i];
-            int y = coords[2 * i + 1];
-            // togda figuri dolzhni ukazivatsa v takom zhe poryadke chto i v sizes
-            int i_w = sizes[i][0];
-            int i_h = sizes[i][1];
-
-            // granitsi
-            if (x < 0 or y < 0 or (x + i_w > w) or (y + i_h > h)) {
-                return false;
-            }
-            // nalozhenia
-            for (int j = 0; j < i; j++) {
-                int x2 = coords[2 * j];
-                int y2 = coords[2 * j + 1];
-                int j_w = sizes[j][0];
-                int j_h = sizes[j][1];
-
-                if ((x < x2 + j_w) and (x + i_w > x2) and (y < y2 + j_h) and (y + i_h > y2)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-*/
-
-//---------------------------------actual version!!!-----------------------------------------
+﻿
+//----------------------------------------------------newest version-----------------------------------------------------
 
 #include <vector>
 #include <iostream>
@@ -54,24 +12,30 @@ struct Piece {
 class Board {
 private:
     int w, h;
-    vector<Piece> pieces;
+    vector<Piece> pieces;  // block's sizes for the board
 
 public:
     Board(int w, int h, vector<Piece> pieces) : w(w), h(h), pieces(pieces) {}
 
-    bool isValid(vector<Piece> given_pieces) {
-        for (int i = 0; i < given_pieces.size(); i++) {
-            auto& p = given_pieces[i];
+    bool isValid(vector<int>& coords) {
+        // safety check
+        if (coords.size() != pieces.size() * 2)
+            return false;
 
-            //granitsi
-            if (p.x < 0 or p.y < 0 or p.x + p.w > w or p.y + p.h > h)
+        for (int i = 0; i < pieces.size(); i++) {
+            int x = coords[2 * i];
+            int y = coords[2 * i + 1];
+
+            // limits
+            if (x < 0 or y < 0 or (x + pieces[i].w > w) or (y + pieces[i].h > h))
                 return false;
 
-            //nalozheniya
+            // nalozheniya
             for (int j = 0; j < i; j++) {
-                auto& q = given_pieces[j];
-                if (p.x < q.x + q.w and p.x + p.w > q.x and
-                    p.y < q.y + q.h and p.y + p.h > q.y)
+                int x2 = coords[2 * j];
+                int y2 = coords[2 * j + 1];
+
+                if (x < x2 + pieces[j].w and x + pieces[i].w > x2 and y < y2 + pieces[j].h and y + pieces[i].h > y2)
                     return false;
             }
         }
@@ -80,14 +44,16 @@ public:
 };
 
 
-/*int main() {
-    vector<Piece> p = {{0, 0, 2, 2}, {1, 1, 2, 2}};
-    vector<Piece> b = {{0, 0, 2, 2}, {0, 2, 1, 2}, {3, 2, 1, 2}, {0, 4, 2, 1}, {2, 4, 2, 1}, {2, 0, 1, 1}, {3, 0, 1, 1}, {2, 1, 1, 1}, {3, 1, 1, 1}};
 
 
-    Board board(4, 5, p);
+int main() {
+    vector<Piece> pieces = { {0, 0, 2, 2}, {0, 0, 1, 2}, {0, 0, 1, 2}, {0, 0, 2, 1}, {0, 0, 2, 1}, {0, 0, 1, 1}, {0, 0, 1, 1}, {0, 0, 1, 1}, {0, 0, 1, 1} };
 
-    if (board.isValid(b)) {
+    vector<int> coords = { 0, 0, 0, 2, 3, 2, 0, 4, 2, 4, 2, 0, 3, 0, 2, 1, 3, 1 };
+
+    Board board(4, 5, pieces);
+
+    if (board.isValid(coords)) {
         cout << "Board is valid!" << endl;
     }
     else {
@@ -95,4 +61,4 @@ public:
     }
 
     return 0;
-}*/
+}
