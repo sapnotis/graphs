@@ -11,9 +11,9 @@
 
 Graph::Graph() : allow_equal_nodes(false), allow_multiple_edges(false),
     POV({0, 0, 0}), POV_multiplier(0.5f), selected_node(nullptr), selected_neighbour(-1),
-    yaw(0), pitch(0), small_corner({0, 0, 0}), big_corner({0, 0, 0}) { };
+    yaw(0), pitch(0), small_corner({0, 0, 0}), big_corner({0, 0, 0}) { }
 
-Graph::~Graph() { };
+Graph::~Graph() { }
 
 Node* Graph::emplace_node(std::vector<int> values) {
     if ( allow_equal_nodes ) {
@@ -22,7 +22,10 @@ Node* Graph::emplace_node(std::vector<int> values) {
     }
     
     if ( findNode(values) ) {
-        std::cout << "(!) Graph attempted to double node" << std::endl;
+        std::cout << "(!) Graph attempted to double node: ";
+        for ( int i : values )
+            std::cout << i << " ";
+        std::cout << std::endl;
         return nullptr;
     }
     
@@ -33,17 +36,17 @@ void Graph::emplace_edge(std::vector<int> val_f, std::vector<int> val_s) {
     Node* f = findNode(val_f);
     Node* s = findNode(val_s);
     emplace_edge( f, s );
-};
+}
 
 void Graph::emplace_edge(Node* f, std::vector<int> val_s) {
     Node* s = findNode(val_s);
     emplace_edge( f, s );
-};
+}
 
 void Graph::emplace_edge(std::vector<int> val_f, Node* s) {
     Node* f = findNode(val_f);
     emplace_edge( f, s );
-};
+}
 
 void Graph::emplace_edge(Node* f, Node* s) {
     if ( !f || !s ) {
@@ -58,7 +61,7 @@ void Graph::emplace_edge(Node* f, Node* s) {
 
     if ( ! allow_multiple_edges )
         if ( f->find_edge(s) || s->find_edge(f) ) {
-            std::cout << "(!) Graph attempted to double edge" << std::endl;
+            // std::cout << "(!) Graph attempted to double edge" << std::endl;
             return;
         }
     
@@ -78,13 +81,13 @@ void Graph::erase_node(std::vector<int> values) {
     for ( Node* neighbour : it->getEdges() )
         neighbour->forget_edge( &(*it) ); // it so cursed i'm so sorry
     nodes.erase(it);
-};
+}
 
 void Graph::erase_edge(std::vector<int> val_f, std::vector<int> val_s) {
     Node* f = findNode(val_f);
     Node* s = findNode(val_s);
     erase_edge(f, s);
-};
+}
 
 void Graph::erase_edge(Node* f, Node* s) {
     if ( ! f->find_edge( s ) || ! s->find_edge( f ) ) {
@@ -94,7 +97,7 @@ void Graph::erase_edge(Node* f, Node* s) {
 
     f->forget_edge( s );
     s->forget_edge( f );
-};
+}
 
 Node* Graph::findNode(std::vector<int> values) {
     Node ref(values);
@@ -112,7 +115,7 @@ std::vector<Node*> Graph::getNodes() {
         node_ptrs.push_back( &(*it) );
 
     return node_ptrs;
-};
+}
 
 void Graph::rollcall() {
     std::cout << std::endl;
@@ -141,7 +144,7 @@ Node::~Node() { };
 
 void Node::add_edge(Node* node) {
     edges.push_back(node);
-};
+}
 
 bool Node::find_edge(Node* node) {
     
@@ -149,7 +152,7 @@ bool Node::find_edge(Node* node) {
     if ( it == edges.end() )
         return false;
     return true;
-};
+}
 
 void Node::forget_edge(Node* node) {
 
@@ -159,7 +162,7 @@ void Node::forget_edge(Node* node) {
         return;
     }
     edges.erase(it);
-};
+}
 
 // V3 and SFML
 
@@ -204,7 +207,7 @@ void Graph::tick() {
 
     for ( auto node = nodes.begin(); node != nodes.end(); node++ )
         node->update_coords();
-};
+}
 
 void Graph::display(sf::RenderWindow& window) {
 
@@ -303,7 +306,7 @@ void Graph::display(sf::RenderWindow& window) {
             display_line( window, window_center, nodes_window_coords[ selected_node ], nodes_window_coords[ selected_node->getEdges()[selected_neighbour] ], selection_color, selection_color );
         }
     }
-};
+}
 
 void Graph::display_point(sf::RenderWindow& window, sf::Vector2f window_center, xyz coords, float RadiusInPixels, sf::Color color) {
     
@@ -315,7 +318,7 @@ void Graph::display_point(sf::RenderWindow& window, sf::Vector2f window_center, 
     circle.setFillColor(color);
     circle.setPosition( window_center + sf::Vector2f({coords.x, -coords.y}) );
     window.draw(circle);
-};
+}
 
 void Graph::display_line(sf::RenderWindow& window, sf::Vector2f window_center, xyz c1, xyz c2, sf::Color col1, sf::Color col2) {
 
@@ -331,7 +334,7 @@ void Graph::display_line(sf::RenderWindow& window, sf::Vector2f window_center, x
     line[0].color = col1;
     line[1].color = col2;
     window.draw(line, 2, sf::Lines);
-};
+}
 
 xyz Graph::calc_window_coords(xyz coords, float scale) {
 
@@ -354,12 +357,12 @@ xyz Graph::calc_window_coords(xyz coords, float scale) {
     final_coords.z = final_coords.z * scale;
 
     return final_coords;
-};
+}
 
 float Graph::perspective_multiplier(float z) {
     float k = 1200.f;
     return ( k / ( k - z ) );
-};
+}
 
 void Graph::display_grid(sf::RenderWindow& window, sf::Color grid_color) {
 
@@ -384,7 +387,7 @@ void Graph::display_grid(sf::RenderWindow& window, sf::Color grid_color) {
         display_line( window, window_center, corners[i], corners[i+2], grid_color, grid_color );
     for ( int i = 4; i < 6; i ++ )
         display_line( window, window_center, corners[i], corners[i+2], grid_color, grid_color );
-};
+}
 
 void Graph::display_xyz_axes(sf::RenderWindow& window, float scale) {
 
@@ -401,7 +404,7 @@ void Graph::display_xyz_axes(sf::RenderWindow& window, float scale) {
     display_line( window, window_center, others[0], others[3], sf::Color::Blue, sf::Color::Blue );
     display_line( window, window_center, others[0], others[2], sf::Color::Green, sf::Color::Green );
     display_line( window, window_center, others[0], others[1], sf::Color::Red, sf::Color::Red );
-};
+}
 
 void Node::update_coords() {
 
@@ -415,4 +418,4 @@ void Node::update_coords() {
 
     coords += velocity;
     velocity *= vel_multiplier;
-};
+}

@@ -15,29 +15,73 @@ int main() {
     
     cout << "Preparing board..." << endl;
 
-    const int width = 4; // ширина
-    const int height = 5; // высота
-    
-    vector<Piece> pieces = {
-        {0, 0, 1, 1}, {0, 1, 1, 1}, {1, 0, 2, 2}, {3, 0, 1, 1}, {3, 1, 1, 1},
-        {0, 2, 1, 2}, {1, 2, 1, 1}, {1, 3, 1, 1}, {2, 2, 1, 1}, {2, 3, 1, 1}, {3, 2, 1, 2},
-        {0, 4, 1, 1}, {3, 4, 1, 1}
-    }; // блоки
+    // 2*3, 1*1 x4 (octaeder-like)
+    const int width = 2;
+    const int height = 3;
+    vector<Piece> pieces = { {0, 0, 1, 1}, {0, 1, 1, 1}, {1, 0, 1, 1}, {1, 1, 1, 1} };
+
+    // 2*3, 1*1 x5 (sphere-like)
+    // const int width = 2;
+    // const int height = 3;
+    // vector<Piece> pieces = { {0, 0, 1, 1}, {1, 0, 1, 1}, {0, 1, 1, 1}, {1, 1, 1, 1}, {0, 2, 1, 1} };
+
+    // bird-like
+    // const int width = 5;
+    // const int height = 5;
+    // vector<Piece> pieces = { {0, 0, 1, 4}, {1, 4, 4, 1}, {2, 1, 2, 1}, {2, 2, 2, 2} };
+
+    // almost 2d with structure
+    // const int width = 6;
+    // const int height = 6;
+    // vector<Piece> pieces = { {0, 0, 3, 3}, {3, 3, 3, 3}, {0, 3, 1, 3}, {3, 0, 2, 3} };
+
+    // two dense bunces connected by four tentacles
+    // const int width = 4;
+    // const int height = 4;
+    // vector<Piece> pieces = { {0, 0, 2, 2}, {2, 0, 2, 2}, {0, 2, 2, 1}, {2, 2, 2, 1} };
+
+    // holed cilider with few ears
+    // const int width = 4;
+    // const int height = 4;
+    // vector<Piece> pieces = { {0, 0, 2, 2}, {2, 0, 2, 2}, {0, 2, 1, 2}, {1, 2, 1, 1}, {1, 3, 1, 1}, {2, 2, 1, 1} };
+
+    // covid-like
+    // const int width = 4;
+    // const int height = 4;
+    // vector<Piece> pieces = { {0, 0, 2, 2}, {2, 0, 2, 2}, {0, 2, 1, 2}, {1, 2, 1, 1}, {1, 3, 1, 1}, {2, 2, 1, 1}, {2, 3, 1, 1} };
+
+    // 8
+    // const int width = 4;
+    // const int height = 4;
+    // vector<Piece> pieces = { {0, 0, 1, 3}, {1, 0, 1, 3}, {0, 3, 1, 1} };
+
+    // :O
+    // const int width = 5;
+    // const int height = 5;
+    // vector<Piece> pieces = { {0, 0, 3, 3}, {0, 4, 3, 1}, {4, 0, 1, 3}, {4, 4, 1, 1} };
 
     Board board(width, height, pieces); // инициализация доски
+
+    std::vector<int> first_node{};
+    for ( Piece p : pieces ) {
+        first_node.push_back(p.x);
+        first_node.push_back(p.y);
+    }
+
+    if ( !board.isValid(first_node) ) {
+        std::cout << "Invalid first node, exit" << std::endl;
+        return 0;
+    }
 
     // ============================== ГРАФ ==============================
 
     cout << "Preparing graph..." << endl;
 
     Graph graph;
-    graph.emplace_node(
-        {0, 0, 0, 1, 1, 0, 3, 0, 3, 1,
-        0, 2, 1, 2, 1, 3, 2, 2, 2, 3, 3, 2,
-        0, 4, 3, 4}
-    ); // стартовая вершина
 
-    board_to_graph(board, graph); // построение графа
+    // построение графа
+    graph.emplace_node(first_node);
+    board_to_graph(board, graph);
 
     cout << "Graph contains " << graph.getNodes().size() << " nodes;" << endl;
 

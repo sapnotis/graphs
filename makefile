@@ -4,7 +4,7 @@ SFMLFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
 
 all: clean main
 
-main: main.o combinator.o board.o graph-components.o tools.o
+main: main.o board.o combinator.o graph-components.o tools.o
 	$(C) main.o board.o combinator.o graph-components.o tools.o -o main $(OPT) $(CFLAGS) $(SFMLFLAGS)
 
 %.o: %.cpp
