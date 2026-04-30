@@ -35,14 +35,18 @@ void board_to_graph(Board& board, Graph& graph)
                 nextState[2 * block] = x + dx[dir];
                 nextState[2 * block + 1] = y + dy[dir];
 
-                if (!board.isValid(nextState)) {
+                if ( !board.isValid(nextState) ) {
                     continue;
                 }
 
-                graph.emplace_node(nextState);
+                if ( !graph.findNode(nextState) ) {
+                    graph.emplace_node(nextState);
+                }
+                
                 graph.emplace_edge(currentState, nextState);
 
-                Node* nextNode = graph.findNode(nextState); // находим указатель на новую вершину. Вершины добавляются в граф в момент обнаружения. Указатель нужен, чтобы проверить checked и решить, нужно ли обрабатывать эту вершину позже
+                Node* nextNode = graph.findNode(nextState);
+                // находим указатель на новую вершину. Вершины добавляются в граф в момент обнаружения. Указатель нужен, чтобы проверить checked и решить, нужно ли обрабатывать эту вершину позже
                 if (nextNode != nullptr && !nextNode->checked) {
                     queue.push(nextState);
                 }
