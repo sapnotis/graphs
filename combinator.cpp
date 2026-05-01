@@ -11,6 +11,12 @@ void board_to_graph(Board& board, Graph& graph)
     queue.push(startState);
 
     while (!queue.empty()) {
+
+        if ( graph.getNodes().size() >= 800 ) {
+            std::cout << "Too many nodes! Further graph generation interrupted" << std::endl;
+            return;
+        }
+
         std::vector<int> currentState = queue.front();
         queue.pop();
 
