@@ -82,7 +82,7 @@ public:
     bool checked;
 
     inline const static float velocity_limit = 12;
-    inline const static float interact_koef = 0.04f;
+    inline static float interact_koef = 0.04f;
     inline const static float vel_multiplier = 0.66f;
     
     // Consider replacing std::vector with std::array

@@ -281,30 +281,32 @@ void Graph::display(sf::RenderWindow& window) {
             node->getColor()
         );
         if ( selected_node )
-            color.a = 55;
+            color.a = 110;
         node->set_color( color );
     }
 
     // display
 
-    display_xyz_axes(window, scale);
+    // display_xyz_axes(window, scale);
     // display_grid(window, sf::Color::Magenta);
 
-    for ( auto node = nodes.begin(); node != nodes.end(); node++ ) {
+    for ( auto node = nodes.begin(); node != nodes.end(); node++ )
+        if ( !selected_node || nodes_window_coords[ &(*node) ].z < 0 ) {
+        
+            display_point( window, window_center, nodes_window_coords[ &(*node) ], 3, node->getColor() );
+            std::vector<Node*> neighbours = node->getEdges();
 
-        display_point( window, window_center, nodes_window_coords[ &(*node) ], 4, node->getColor() );
-        std::vector<Node*> neighbours = node->getEdges();
+            for ( Node* neighbour : neighbours )
+                display_line( window, window_center, nodes_window_coords[ &(*node) ],
+                    nodes_window_coords[ neighbour ], node->getColor(), neighbour->getColor() );
 
-        for ( Node* neighbour : neighbours )
-            display_line( window, window_center, nodes_window_coords[ &(*node) ], nodes_window_coords[ neighbour ], node->getColor(), neighbour->getColor() );
-
-    }
+        }
 
     if ( selected_node ) {
         display_point( window, window_center, nodes_window_coords[ selected_node ], 4, selection_color );
-        if ( selected_neighbour != -1 ) {
-            display_line( window, window_center, nodes_window_coords[ selected_node ], nodes_window_coords[ selected_node->getEdges()[selected_neighbour] ], selection_color, selection_color );
-        }
+        if ( selected_neighbour != -1 )
+            display_line( window, window_center, nodes_window_coords[ selected_node ],
+                nodes_window_coords[ selected_node->getEdges()[selected_neighbour] ], selection_color, selection_color );
     }
 }
 
@@ -410,11 +412,17 @@ void Node::update_coords() {
 
     if ( len_squared(velocity) > velocity_limit*velocity_limit ) {
         float k = velocity_limit / std::sqrt( len_squared(velocity) );
-        velocity.x *= k; velocity.y*= k; velocity.z*= k;
-        color = sf::Color(255, 0, 0);
+        velocity.x *= k;
+        velocity.y *= k;
+        velocity.z *= k;
+        color = sf::Color::Red;
     }
-    else
-        color = sf::Color::White;
+    else {
+        if ( checked )
+            color = sf::Color::White;
+        else
+            color = sf::Color::Magenta;
+    }
 
     coords += velocity;
     velocity *= vel_multiplier;
