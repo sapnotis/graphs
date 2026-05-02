@@ -9,6 +9,8 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
+const float perspective_distance = 1200.f;
+
 Graph::Graph() : allow_equal_nodes(false), allow_multiple_edges(false),
     POV({0, 0, 0}), POV_multiplier(0.5f), selected_node(nullptr), selected_neighbour(-1),
     yaw(0), pitch(0), small_corner({0, 0, 0}), big_corner({0, 0, 0}) { }
@@ -136,9 +138,6 @@ void Graph::rollcall() {
 
 Node::Node(std::vector<int> values)
     : values(values), coords({0, 0, 0}), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
-
-Node::Node(std::vector<int> values, xyz coords)
-    : values(values), coords(coords), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
 
 Node::~Node() { };
 
@@ -281,17 +280,18 @@ void Graph::display(sf::RenderWindow& window) {
             node->getColor()
         );
         if ( selected_node )
-            color.a = 110;
+            color.a = 127;
         node->set_color( color );
     }
 
     // display
 
-    // display_xyz_axes(window, scale);
     // display_grid(window, sf::Color::Magenta);
+    if (selected_node)
+        display_xyz_axes(window, scale);
 
     for ( auto node = nodes.begin(); node != nodes.end(); node++ )
-        if ( !selected_node || nodes_window_coords[ &(*node) ].z < 0 ) {
+        if ( !selected_node || nodes_window_coords[ &(*node) ].z < 0.8f * perspective_distance ) {
         
             display_point( window, window_center, nodes_window_coords[ &(*node) ], 3, node->getColor() );
             std::vector<Node*> neighbours = node->getEdges();
@@ -362,8 +362,7 @@ xyz Graph::calc_window_coords(xyz coords, float scale) {
 }
 
 float Graph::perspective_multiplier(float z) {
-    float k = 1200.f;
-    return ( k / ( k - z ) );
+    return ( perspective_distance / ( perspective_distance - z ) );
 }
 
 void Graph::display_grid(sf::RenderWindow& window, sf::Color grid_color) {

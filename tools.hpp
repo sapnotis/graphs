@@ -39,8 +39,6 @@ struct xyz
     };
 };
 
-unsigned int rnd_number(unsigned a, unsigned b);
-
 xyz rnd_xyz_direction(float amplitude);
 
 float len_squared(xyz delta);

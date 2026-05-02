@@ -1,114 +1,25 @@
 #include <iostream>
 using std::cin, std::cout, std::endl;
-#include "graph-components.hpp"
-#include "combinator.hpp"
 #include "board.hpp"
+#include "combinator.hpp"
+#include "graph-components.hpp"
 
-#include <chrono>
 #include <cmath>
-#include <fstream>
 #include <string>
 #include <sstream>
 
-
 int main() {
 
-    // ============================== ДОСКА ==============================
+    // ============================== BOARD ==============================
 
-    cout << "\nSelect board:" << endl;
+    cout << "\nPreparing board..." << endl;
 
-    int board_selector;
-
-    cout << "  0: custom board from config" << endl;
-    cout << endl;
-    cout << "  1: rose-like graph" << endl;
-    cout << "  2: bird-like graph" << endl;
-    cout << "  3: almost flat graph" << endl;
-    cout << "  4: rugby ball-like graph" << endl;
-    cout << "  5: \"blown cilider\" graph" << endl;
-    cout << "  6: coronavirus-like graph" << endl;
-    cout << "  7: \":O\"-like graph" << endl;
-    cout << "  8: 8-like graph" << endl;
-
-    cin >> board_selector;
     int width = 0, height = 0;
     vector<Piece> pieces;
+    if ( !select_board(width, height, pieces) )
+        return 1;
 
-    switch (board_selector)
-    {
-    case 0: {
-        std::ifstream config("config.txt");
-        if (!config.is_open()) { std::cerr << "Couldn't find config! exit" << std::endl; return 1; }
-
-        std::string line;
-        while (std::getline(config, line)) {
-            if (line[0]=='#') continue;
-            if (!width) {
-                width = std::stoi(line);
-                continue;
-            }
-            if (!height) {
-                height = std::stoi(line);
-                continue;
-            }
-
-            std::stringstream ss(line);
-            Piece piece;
-            ss >> piece.x >> piece.y >> piece.w >> piece.h;
-            pieces.push_back(piece);
-        }
-
-        config.close();
-        break;
-    } case 1: {
-        width = 2;
-        height = 3;
-        pieces = { {0, 0, 1, 1}, {1, 0, 1, 1}, {0, 1, 1, 1}, {1, 1, 1, 1}, {0, 2, 1, 1} };
-        break;
-    } case 2: {
-        width = 5;
-        height = 5;
-        pieces = { {0, 0, 1, 4}, {1, 4, 4, 1}, {2, 1, 2, 1}, {2, 2, 2, 2} };
-        break;
-    } case 3: {
-        width = 6;
-        height = 6;
-        pieces = { {0, 0, 3, 3}, {3, 3, 3, 3}, {0, 3, 1, 3}, {3, 0, 2, 3} };
-        break;
-    } case 4: {
-        width = 4;
-        height = 4;
-        pieces = { {0, 0, 2, 2}, {2, 0, 2, 2}, {0, 2, 2, 1}, {2, 2, 2, 1} };
-        break;
-    } case 5: {
-        width = 4;
-        height = 4;
-        pieces = { {0, 0, 2, 2}, {2, 0, 2, 2}, {0, 2, 1, 2}, {1, 2, 1, 1}, {1, 3, 1, 1}, {2, 2, 1, 1} };
-        break;
-    } case 6: {
-        width = 4;
-        height = 4;
-        pieces = { {0, 0, 2, 2}, {2, 0, 2, 2}, {0, 2, 1, 2}, {1, 2, 1, 1}, {1, 3, 1, 1}, {2, 2, 1, 1}, {2, 3, 1, 1} };
-        break;
-    } case 7: {
-        width = 5;
-        height = 5;
-        pieces = { {0, 0, 3, 3}, {0, 4, 3, 1}, {4, 0, 1, 3}, {4, 4, 1, 1} };
-        break;
-    } case 8: {
-        width = 4;
-        height = 4;
-        pieces = { {0, 0, 1, 3}, {1, 0, 1, 3}, {0, 3, 1, 1} };
-        break;
-    } default: {
-        cout << "Invalid selection! exit" << endl;
-        return 0;
-    }
-    }
-
-    cout << "Preparing board..." << endl;
-
-    Board board(width, height, pieces); // инициализация доски
+    Board board(width, height, pieces);
 
     std::vector<int> first_node{};
     for ( Piece p : pieces ) {
@@ -117,41 +28,40 @@ int main() {
     }
 
     if ( !board.isValid(first_node) ) {
-        cout << "Invalid configuration! exit" << endl;
-        return 0;
+        cout << "Invalid board setup! exit" << endl;
+        return 1;
     }
 
-    // ============================== ГРАФ ==============================
+    // ============================== GRAPH ==============================
 
-    cout << "Preparing graph..." << endl;
+    cout << "\nPreparing graph..." << endl;
 
     Graph graph;
-
-    // построение графа
     graph.emplace_node(first_node);
     board_to_graph(board, graph);
 
-    cout << "Graph contains " << graph.getNodes().size() << " nodes" << endl;
+    cout << "\nGraph contains " << graph.getNodes().size() << " nodes" << endl;
 
-    // ============================== ОКНО ==============================
+    // ============================== WINDOW ==============================
     
-    cout << "Preparing window..." << endl;
+    cout << "\nPreparing window..." << endl;
 
     const int FPS = 60;
-    int frame = 0;
     const float delta_angle = 0.05;
+    int frame = 0;
     
-    sf::RenderWindow window(sf::VideoMode( 1600, 900 ), "Graph");
+    sf::RenderWindow window(sf::VideoMode( 1600, 900 ), "Board2graph");
     window.setFramerateLimit(FPS);
 
     sf::Font font;
     if ( !font.loadFromFile("arialmt.ttf") )
-        return -1;
+        return 1;
 
     sf::Text debug_text;
     debug_text.setFont(font);
     debug_text.setCharacterSize(20);
     debug_text.setFillColor(sf::Color::White);
+    
     debug_text.setPosition(20.f, 20.f);
 
     sf::Text node_text;
@@ -162,13 +72,17 @@ int main() {
     sf::Clock clock;
     clock.restart();
 
-    cout << "Running window..." << endl;
+    cout << "\nRunning window..." << endl;
 
-    cout << "\nUse buttons:\n\tEsc to exit.\n\tR to Reset Yaw/Pitch.\n\tS to Shake.\n\tM to change Mode..." << endl;
-    cout << "In \"Node travelling\" mode use Tab to select next node and Enter to go there." << endl;
- 
+    cout << "\nUse buttons:" << endl;
+    cout << "  Esc to exit" << endl;
+    cout << "  R to Reset Yaw/Pitch" << endl;
+    cout << "  S to Shake" << endl;
+    cout << "  M to change Mode..." << endl;
+    cout << "In \"node travelling\" mode use Tab to select next node and Enter to go there." << endl;
+
     for ( Node* tmp : graph.getNodes() )
-        tmp->set_coords(rnd_xyz_direction( 20 * std::cbrt ( graph.getNodes().size() ) ));
+        tmp->set_coords( rnd_xyz_direction(20.f*std::cbrt (graph.getNodes().size())) );
     
     float LagRatio = 1;
 
@@ -185,25 +99,33 @@ int main() {
             }
 
             if (event.type == sf::Event::KeyPressed) {
+
                 if (event.key.code == sf::Keyboard::Escape)
                     window.close();
+
                 if (event.key.code == sf::Keyboard::R)
                     graph.resetYawPitch();
+
                 if (event.key.code == sf::Keyboard::S)
                     for ( Node* tmp : graph.getNodes() )
-                        tmp->set_coords(rnd_xyz_direction( 20 * std::cbrt ( graph.getNodes().size() ) ));
+                        tmp->set_coords( rnd_xyz_direction(20.f*std::cbrt (graph.getNodes().size())) );
+
                 if (event.key.code == sf::Keyboard::M) {
                     graph.set_selected_neighbour(-1);
-                    if ( graph.get_selected_node() ) graph.set_selected_node(nullptr);
-                    else graph.set_selected_node( graph.getNodes()[rnd_number(0, graph.getNodes().size()-1)] );
+                    if ( graph.get_selected_node() )
+                        graph.set_selected_node(nullptr);
+                    else
+                        graph.set_selected_node( graph.getNodes().back() );
                 }
+
                 if (event.key.code == sf::Keyboard::Tab)
                     if ( graph.get_selected_node() )
                         if ( graph.get_selected_node()->getEdges().size() )
                             graph.set_selected_neighbour(
-                                (graph.get_selected_neighbour() + 1) % graph.get_selected_node()->getEdges().size()
+                                ( graph.get_selected_neighbour() + 1 ) % ( graph.get_selected_node()->getEdges().size() )
                             );
-                if (event.key.code == sf::Keyboard::Enter) {
+
+                if (event.key.code == sf::Keyboard::Enter)
                     if ( graph.get_selected_node() && graph.get_selected_neighbour() != -1 ) {
 
                         graph.set_selected_node( graph.get_selected_node()->getEdges()[graph.get_selected_neighbour()] );
@@ -212,7 +134,6 @@ int main() {
                         else
                             graph.set_selected_neighbour( -1 );
                     }
-                }
             }
         }
 
@@ -242,22 +163,20 @@ int main() {
             + "\ninteract_koef: " + std::to_string(Node::interact_koef)
             + "\nvel_multiplier: " + std::to_string(Node::vel_multiplier) );
 
-        node_text.setPosition(window.getSize().x / 2 + 10, window.getSize().y / 2 + 10);
         std::stringstream ss;
         if ( graph.get_selected_node() )
             for ( int i : graph.get_selected_node()->getValues() )
                 ss << i << " ";
-        else
-            ss << 0;
         node_text.setString( ss.str() );
+        node_text.setPosition(window.getSize().x / 2 + 10, window.getSize().y / 2 + 10);
 
         window.draw(debug_text);
         window.draw(node_text);
-
-        graph.tick();
         graph.display(window);
         
         window.display();
+
+        graph.tick();
     }
 
     return 0;

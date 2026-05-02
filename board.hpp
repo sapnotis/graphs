@@ -11,11 +11,13 @@ struct Piece {
 class Board {
 private:
     int w, h;
-    vector<Piece> pieces; // block's sizes for the board
-
+    vector<Piece> pieces;
 public:
     Board(int w, int h, vector<Piece> pieces) : w(w), h(h), pieces(pieces) { };
-    bool isValid(vector<int> coords);
+    // bool isValid(const vector<int>& coords);
+    bool isValid(const vector<int> coords);
 };
+
+bool select_board(int& width, int& height, vector<Piece>& pieces);
 
 #endif
