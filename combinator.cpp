@@ -3,29 +3,28 @@
 
 void board_to_graph(Board& board, Graph& graph)
 {
-    std::vector<Node*> nodes = graph.getNodes();
-    if (nodes.empty()) return;
-    std::vector<int> startState = nodes[0]->getValues();
+
+    if ( graph.getNodes().empty() ) return;
+    std::vector<int> startState = graph.getNodes().front()->getValues();
 
     std::queue<std::vector<int>> queue;
     queue.push(startState);
 
     while (!queue.empty()) {
 
-        if ( graph.getNodes().size() >= 800 ) {
-            std::cout << "Too many nodes! Further graph generation interrupted" << std::endl;
-            return;
+        if ( graph.getNodes().size() >= 1000 ) {
+            std::cout << "Too many nodes! Interrupted graph processing" << std::endl;
+            break;
         }
 
         std::vector<int> currentState = queue.front();
         queue.pop();
 
         Node* currentNode = graph.findNode(currentState);
-        if (currentNode == nullptr || currentNode->checked) {
+        if (currentNode == nullptr || currentNode->status != UNKNOWN )
             continue;
-        }
 
-        currentNode->checked = true;
+        currentNode->status = ORDINARY;
 
         int numBlocks = currentState.size() / 2;
 
@@ -52,13 +51,17 @@ void board_to_graph(Board& board, Graph& graph)
                 graph.emplace_edge(currentState, nextState);
 
                 Node* nextNode = graph.findNode(nextState);
-                // находим указатель на новую вершину. Вершины добавляются в граф в момент обнаружения. Указатель нужен, чтобы проверить checked и решить, нужно ли обрабатывать эту вершину позже
-                if (nextNode != nullptr && !nextNode->checked) {
+                // находим указатель на новую вершину.
+                // Вершины добавляются в граф в момент обнаружения.
+                // Указатель нужен, чтобы проверить checked и решить, нужно ли обрабатывать эту вершину позже.
+                if (nextNode && nextNode->status == UNKNOWN ) {
                     queue.push(nextState);
                 }
             }
         }
     }
+
+    graph.findNode(startState)->status = START;
 }
 
 void test_graph_torus(Graph& graph)

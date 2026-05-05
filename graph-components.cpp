@@ -137,7 +137,7 @@ void Graph::rollcall() {
 }
 
 Node::Node(std::vector<int> values)
-    : values(values), coords({0, 0, 0}), velocity({0, 0, 0}), color(sf::Color::White), checked(false) { };
+    : values(values), coords({0, 0, 0}), velocity({0, 0, 0}), color(sf::Color::White), status(UNKNOWN) { };
 
 Node::~Node() { };
 
@@ -306,7 +306,7 @@ void Graph::display(sf::RenderWindow& window) {
         display_point( window, window_center, nodes_window_coords[ selected_node ], 4, selection_color );
         if ( selected_neighbour != -1 )
             display_line( window, window_center, nodes_window_coords[ selected_node ],
-                nodes_window_coords[ selected_node->getEdges()[selected_neighbour] ], selection_color, selection_color );
+                nodes_window_coords[ selected_node->getEdges()[selected_neighbour] ], selection_color, selection_color  );
     }
 }
 
@@ -416,12 +416,8 @@ void Node::update_coords() {
         velocity.z *= k;
         color = sf::Color::Red;
     }
-    else {
-        if ( checked )
-            color = sf::Color::White;
-        else
-            color = sf::Color::Magenta;
-    }
+    else
+        color = color_of_status[status];
 
     coords += velocity;
     velocity *= vel_multiplier;

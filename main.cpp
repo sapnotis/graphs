@@ -115,7 +115,7 @@ int main() {
                     if ( graph.get_selected_node() )
                         graph.set_selected_node(nullptr);
                     else
-                        graph.set_selected_node( graph.getNodes().back() );
+                        graph.set_selected_node( graph.findNode(first_node) );
                 }
 
                 if (event.key.code == sf::Keyboard::Tab)

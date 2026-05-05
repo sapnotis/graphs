@@ -1,5 +1,5 @@
-#ifndef _COMBINATOR_
-#define _COMBINATOR_
+#ifndef _COMBINATOR_LOGIC_
+#define _COMBINATOR_LOGIC_
 
 #include "graph-components.hpp"
 #include "board.hpp"

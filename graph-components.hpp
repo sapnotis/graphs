@@ -3,7 +3,11 @@
 
 #include "tools.hpp"
 #include <vector>
+using std::vector;
 #include <list>
+using std::list;
+#include <map>
+using std::map;
 
 #include <iostream>
 #include <SFML/Graphics.hpp>
@@ -16,7 +20,7 @@ class Graph
 private:
     const bool allow_equal_nodes; // meant to stay false (one node represents one state of values)
     const bool allow_multiple_edges; // meant to stay false (different moves of the same result are impossible)
-    std::list<Node> nodes;
+    list<Node> nodes;
 
     xyz POV;
     const float POV_multiplier;
@@ -43,7 +47,7 @@ public:
     void erase_edge(Node* f, Node* s);
 
     Node* findNode(std::vector<int> values);
-    std::vector<Node*> getNodes();
+    vector<Node*> getNodes();
     void rollcall();
 
     // V3 and SFML
@@ -70,6 +74,20 @@ public:
     void display_xyz_axes(sf::RenderWindow& window, float scale);
 };
 
+enum NodeType {
+    UNKNOWN,
+    ORDINARY,
+    START,
+    WIN
+};
+
+inline map<NodeType, sf::Color> color_of_status = {
+    {UNKNOWN, sf::Color::Magenta},
+    {ORDINARY, sf::Color::White},
+    {START, sf::Color::Green},
+    {WIN, sf::Color::Blue}
+};
+
 class Node
 {
 private:
@@ -79,7 +97,7 @@ private:
     xyz velocity;
     sf::Color color;
 public:
-    bool checked;
+    NodeType status;
 
     inline const static float velocity_limit = 12;
     inline static float interact_koef = 0.04f;
@@ -89,7 +107,6 @@ public:
     // cause it's literally array of numbers
     // no vector logic is needed
     Node(std::vector<int> values);
-    Node(std::vector<int> values, xyz coords);
     ~Node();
 
     bool operator==(const Node& other) const { return ( values == other.values ); }
@@ -98,8 +115,8 @@ public:
     bool find_edge(Node* node);
     void forget_edge(Node* node);
 
-    std::vector<int> getValues() { return values; };
-    std::vector<Node*> getEdges() { return edges; }; 
+    vector<int> getValues() { return values; };
+    vector<Node*> getEdges() { return edges; }; 
 
     // V3 and SFML
     
