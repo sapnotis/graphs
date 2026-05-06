@@ -1,13 +1,15 @@
 #include "combinator.hpp"
+using std::vector;
 #include <queue>
+using std::queue;
 
 void board_to_graph(Board& board, Graph& graph)
 {
 
     if ( graph.getNodes().empty() ) return;
-    std::vector<int> startState = graph.getNodes().front()->getValues();
+    vector<int> startState = graph.getNodes().front()->getValues();
 
-    std::queue<std::vector<int>> queue;
+    queue<std::vector<int>> queue;
     queue.push(startState);
 
     while (!queue.empty()) {
@@ -17,7 +19,7 @@ void board_to_graph(Board& board, Graph& graph)
             break;
         }
 
-        std::vector<int> currentState = queue.front();
+        vector<int> currentState = queue.front();
         queue.pop();
 
         Node* currentNode = graph.findNode(currentState);
@@ -36,24 +38,22 @@ void board_to_graph(Board& board, Graph& graph)
             int dy[] = {0, 0, 1, -1};
 
             for (int dir = 0; dir < 4; dir++) {
-                std::vector<int> nextState = currentState;
+                
+                vector<int> nextState = currentState;
                 nextState[2 * block] = x + dx[dir];
                 nextState[2 * block + 1] = y + dy[dir];
 
-                if ( !board.isValid(nextState) ) {
+                if ( board.result_state_of(nextState).empty() ) {
                     continue;
                 }
 
-                if ( !graph.findNode(nextState) ) {
+                if ( !graph.findNode(nextState) )
                     graph.emplace_node(nextState);
-                }
-                
-                graph.emplace_edge(currentState, nextState);
+
+                if ( !graph.findEdge(currentState, nextState) )
+                    graph.emplace_edge(currentState, nextState);
 
                 Node* nextNode = graph.findNode(nextState);
-                // находим указатель на новую вершину.
-                // Вершины добавляются в граф в момент обнаружения.
-                // Указатель нужен, чтобы проверить checked и решить, нужно ли обрабатывать эту вершину позже.
                 if (nextNode && nextNode->status == UNKNOWN ) {
                     queue.push(nextState);
                 }

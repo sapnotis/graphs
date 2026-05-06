@@ -9,32 +9,34 @@ using std::vector;
 #include <string>
 #include <sstream>
 
-bool Board::isValid(const vector<int> coords) {
+vector<int> Board::result_state_of(const vector<int> state) {
 
-    if ( coords.size() != 2*pieces.size() ) {
+    vector<int> result_state;
+
+    if ( state.size() != 2*pieces.size() ) {
         cout << "(!) incorrect vector size at IsValid()" << endl;
-        return false;
+        return result_state;
     }
 
     for  ( size_t i = 0; i < pieces.size(); i++ ) {
         
-        int x1 = coords[2 * i];
-        int y1 = coords[2 * i + 1];
+        int x1 = state[2 * i];
+        int y1 = state[2 * i + 1];
 
         if (x1 < 0 or y1 < 0 or (x1 + pieces[i].w > w) or (y1 + pieces[i].h > h))
-            return false;
+            return result_state;
 
         for ( size_t j = 0; j < i; j++ ) {
 
-            int x2 = coords[2 * j];
-            int y2 = coords[2 * j + 1];
+            int x2 = state[2 * j];
+            int y2 = state[2 * j + 1];
             
             if (x1 < x2 + pieces[j].w and x1 + pieces[i].w > x2 and y1 < y2 + pieces[j].h and y1 + pieces[i].h > y2)
-                return false;
+                return result_state;
         }
     }
 
-    return true;
+    return state;
 }
 
 bool select_board(int& width, int& height, vector<Piece>& pieces) {

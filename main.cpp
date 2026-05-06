@@ -27,7 +27,7 @@ int main() {
         first_node.push_back(p.y);
     }
 
-    if ( !board.isValid(first_node) ) {
+    if ( board.result_state_of(first_node).empty() ) {
         cout << "Invalid board setup! exit" << endl;
         return 1;
     }

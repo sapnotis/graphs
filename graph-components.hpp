@@ -47,6 +47,7 @@ public:
     void erase_edge(Node* f, Node* s);
 
     Node* findNode(std::vector<int> values);
+    bool findEdge(std::vector<int> v1, std::vector<int> v2);
     vector<Node*> getNodes();
     void rollcall();
 
@@ -78,14 +79,16 @@ enum NodeType {
     UNKNOWN,
     ORDINARY,
     START,
-    WIN
+    WIN,
+    IGNORED
 };
 
 inline map<NodeType, sf::Color> color_of_status = {
     {UNKNOWN, sf::Color::Magenta},
     {ORDINARY, sf::Color::White},
     {START, sf::Color::Green},
-    {WIN, sf::Color::Blue}
+    {WIN, sf::Color::Blue},
+    {IGNORED, sf::Color::Black}
 };
 
 class Node

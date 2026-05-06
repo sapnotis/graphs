@@ -63,7 +63,7 @@ void Graph::emplace_edge(Node* f, Node* s) {
 
     if ( ! allow_multiple_edges )
         if ( f->find_edge(s) || s->find_edge(f) ) {
-            // std::cout << "(!) Graph attempted to double edge" << std::endl;
+            std::cout << "(!) Graph attempted to double edge" << std::endl;
             return;
         }
     
@@ -108,6 +108,20 @@ Node* Graph::findNode(std::vector<int> values) {
     if ( it == nodes.end() )
         return nullptr;
     return ( &(*it) );
+}
+
+bool Graph::findEdge(std::vector<int> v1, std::vector<int> v2) {
+    
+    Node* first = findNode(v1);
+    if ( !first ) return false;
+    Node* second = findNode(v2);
+    if ( !second ) return false;
+
+    if ( first->find_edge(second) || second->find_edge(first) ) {
+        return true;
+    }
+
+    return false;
 }
 
 std::vector<Node*> Graph::getNodes() {

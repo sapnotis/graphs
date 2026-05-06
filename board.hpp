@@ -14,8 +14,9 @@ private:
     vector<Piece> pieces;
 public:
     Board(int w, int h, vector<Piece> pieces) : w(w), h(h), pieces(pieces) { };
-    // bool isValid(const vector<int>& coords);
-    bool isValid(const vector<int> coords);
+    
+    // bad name, can't come up with good one
+    vector<int> result_state_of(const vector<int> state);
 };
 
 bool select_board(int& width, int& height, vector<Piece>& pieces);
