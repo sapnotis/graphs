@@ -16,8 +16,10 @@ int main() {
 
     int width = 0, height = 0;
     vector<Piece> pieces;
-    if ( !select_board(width, height, pieces) )
+    if ( !select_board(width, height, pieces) ) {
+        cout << "(!) Invalid selection! exit" << endl;
         return 1;
+    }
 
     Board board(width, height, pieces);
 
@@ -28,7 +30,7 @@ int main() {
     }
 
     if ( board.result_state_of(first_node).empty() ) {
-        cout << "Invalid board setup! exit" << endl;
+        cout << "(!) Invalid board setup! exit" << endl;
         return 1;
     }
 

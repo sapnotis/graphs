@@ -1,5 +1,7 @@
 ﻿#include "board.hpp"
 
+#include <algorithm>
+
 #include <iostream>
 using std::cin, std::cout, std::endl;
 #include <vector>
@@ -9,9 +11,11 @@ using std::vector;
 #include <string>
 #include <sstream>
 
-vector<int> Board::result_state_of(const vector<int> state) {
+vector<int> Board::result_state_of(const vector<int> state) const {
 
     vector<int> result_state;
+
+    // check if state is valid, return {} if not
 
     if ( state.size() != 2*pieces.size() ) {
         cout << "(!) incorrect vector size at IsValid()" << endl;
@@ -36,7 +40,33 @@ vector<int> Board::result_state_of(const vector<int> state) {
         }
     }
 
-    return state;
+    // find result state
+
+    vector<bool> is_used(pieces.size(), false);
+
+    for ( size_t i = 0; i < pieces.size(); ++i ) {
+
+        int best_suitable_piece = -1;
+
+        for ( size_t j = 0; j < pieces.size(); ++j ) {
+
+            if ( !is_used[j] )
+                if ( pieces[j]==pieces[i] )
+                    if ( best_suitable_piece == -1
+                    || ( h * state[2*j] + state[2*j+1] ) <= ( h * state[2*best_suitable_piece] + state[2*best_suitable_piece+1] ) )
+                        best_suitable_piece = j;
+        }
+
+        if ( best_suitable_piece == -1 ) {
+            std::cout << "(!) no best_suitable_piece" << std::endl;
+        }
+
+        result_state.push_back( state[2*best_suitable_piece] );
+        result_state.push_back( state[2*best_suitable_piece+1] );
+        is_used[best_suitable_piece] = true;
+    }
+
+    return result_state;
 }
 
 bool select_board(int& width, int& height, vector<Piece>& pieces) {
@@ -128,7 +158,6 @@ bool select_board(int& width, int& height, vector<Piece>& pieces) {
         pieces = { {0, 0, 3, 3}, {0, 4, 3, 1}, {4, 0, 1, 3}, {4, 4, 1, 1} };
         break;
     } default: {
-        cout << "Invalid selection! exit" << endl;
         return false;
     }
     }

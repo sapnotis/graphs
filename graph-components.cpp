@@ -254,7 +254,7 @@ void Graph::display(sf::RenderWindow& window) {
     float maxdist = std::sqrt(maxdist_sqr);
 
     float scale = 30;
-    if ( ! selected_node ) {
+    if ( ! selected_node || maxdist < 10 ) {
         if ( window_center.y < window_center.x )
             scale = 0.9f * window_center.y / maxdist;
         else
@@ -300,14 +300,15 @@ void Graph::display(sf::RenderWindow& window) {
 
     // display
 
-    // display_grid(window, sf::Color::Magenta);
+    // display_grid(window, sf::Color::Yellow);
+
     if (selected_node)
         display_xyz_axes(window, scale);
 
     for ( auto node = nodes.begin(); node != nodes.end(); node++ )
-        if ( !selected_node || nodes_window_coords[ &(*node) ].z < 0.8f * perspective_distance ) {
+        if ( !selected_node || nodes_window_coords[ &(*node) ].z < 0.5f * perspective_distance ) {
         
-            display_point( window, window_center, nodes_window_coords[ &(*node) ], 3, node->getColor() );
+            display_point( window, window_center, nodes_window_coords[ &(*node) ], 2, node->getColor() );
             std::vector<Node*> neighbours = node->getEdges();
 
             for ( Node* neighbour : neighbours )
