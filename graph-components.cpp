@@ -301,14 +301,16 @@ void Graph::display(sf::RenderWindow& window) {
     // display
 
     // display_grid(window, sf::Color::Yellow);
+    display_xyz_axes(window, scale);
 
-    if (selected_node)
-        display_xyz_axes(window, scale);
+    float NodeRadius = 2;
+    if ( selected_node )
+        NodeRadius = 4;
 
     for ( auto node = nodes.begin(); node != nodes.end(); node++ )
         if ( !selected_node || nodes_window_coords[ &(*node) ].z < 0.5f * perspective_distance ) {
         
-            display_point( window, window_center, nodes_window_coords[ &(*node) ], 2, node->getColor() );
+            display_point( window, window_center, nodes_window_coords[ &(*node) ], NodeRadius, node->getColor() );
             std::vector<Node*> neighbours = node->getEdges();
 
             for ( Node* neighbour : neighbours )
@@ -318,10 +320,13 @@ void Graph::display(sf::RenderWindow& window) {
         }
 
     if ( selected_node ) {
-        display_point( window, window_center, nodes_window_coords[ selected_node ], 4, selection_color );
-        if ( selected_neighbour != -1 )
+        display_point( window, window_center, nodes_window_coords[ selected_node ], NodeRadius, selection_color );
+        if ( selected_neighbour != -1 ) {
             display_line( window, window_center, nodes_window_coords[ selected_node ],
                 nodes_window_coords[ selected_node->getEdges()[selected_neighbour] ], selection_color, selection_color  );
+            display_point( window, window_center,
+                nodes_window_coords[ selected_node->getEdges()[selected_neighbour] ], NodeRadius, selection_color );
+        }
     }
 }
 
@@ -407,7 +412,7 @@ void Graph::display_grid(sf::RenderWindow& window, sf::Color grid_color) {
 
 void Graph::display_xyz_axes(sf::RenderWindow& window, float scale) {
 
-    sf::Vector2f window_center = { 0.5f * window.getSize().x, 0.5f * window.getSize().y };
+    sf::Vector2f window_center = { 0.15f * window.getSize().x, 0.8f * window.getSize().y };
     
     std::map<int, xyz> others;
 

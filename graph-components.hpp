@@ -80,15 +80,15 @@ enum NodeType {
     ORDINARY,
     START,
     WIN,
-    IGNORED
+    // IGNORED
 };
 
 inline map<NodeType, sf::Color> color_of_status = {
     {UNKNOWN, sf::Color::Magenta},
     {ORDINARY, sf::Color::White},
-    {START, sf::Color::Green},
-    {WIN, sf::Color::Blue},
-    {IGNORED, sf::Color::Black}
+    {START, sf::Color::Cyan},
+    {WIN, sf::Color::Green},
+    // {IGNORED, sf::Color::Black}
 };
 
 class Node
